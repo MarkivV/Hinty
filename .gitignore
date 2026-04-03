@@ -1,0 +1,11 @@
+node_modules/
+dist/
+release/
+.env
+.env.local
+.next/
+*.dmg
+*.exe
+*.blockmap
+.DS_Store
+*.log
