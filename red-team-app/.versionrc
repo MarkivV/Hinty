@@ -1,0 +1,15 @@
+{
+  "types": [
+    { "type": "feat", "section": "New Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance" },
+    { "type": "refactor", "section": "Improvements", "hidden": false },
+    { "type": "chore", "hidden": true },
+    { "type": "docs", "hidden": true },
+    { "type": "style", "hidden": true },
+    { "type": "test", "hidden": true },
+    { "type": "ci", "hidden": true }
+  ],
+  "commitUrlFormat": "https://github.com/MarkivV/Hinty/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/MarkivV/Hinty/compare/{{previousTag}}...{{currentTag}}"
+}

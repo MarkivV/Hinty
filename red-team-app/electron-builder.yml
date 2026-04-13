@@ -1,0 +1,61 @@
+appId: com.hinty.app
+productName: Hinty
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - src/renderer/**/*.html
+  - "!**/*.map"
+
+afterPack: ./scripts/afterPack.js
+
+extraResources:
+  - from: build/Release/panel_helper.node
+    to: panel_helper.node
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - universal
+    - target: zip
+      arch:
+        - universal
+  category: public.app-category.education
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  extendInfo:
+    NSScreenCaptureUsageDescription: "Hinty needs screen recording access to analyze questions visible on your screen."
+    NSMicrophoneUsageDescription: "Hinty needs microphone access for audio capture during study sessions."
+    CFBundleURLTypes:
+      - CFBundleURLName: "Hinty Deep Link"
+        CFBundleURLSchemes:
+          - hinty
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: "${productName}-Setup-${version}.${ext}"
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+publish:
+  provider: github
+  owner: MarkivV
+  repo: Hinty

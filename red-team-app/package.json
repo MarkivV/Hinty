@@ -1,0 +1,46 @@
+{
+  "name": "hinty",
+  "version": "1.0.36",
+  "description": "AI-powered invisible study assistant",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "tsc && electron .",
+    "rebuild-native": "node-gyp rebuild --target=$(npx electron --version | sed 's/v//') --arch=arm64 --dist-url=https://electronjs.org/headers",
+    "build:ts": "tsc",
+    "start": "electron .",
+    "build:mac": "tsc && electron-builder --mac",
+    "release": "./scripts/release.sh",
+    "build:win": "tsc && electron-builder --win",
+    "build": "tsc && electron-builder --mac --win",
+    "lint": "eslint src/ --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "version:patch": "standard-version --release-as patch",
+    "version:minor": "standard-version --release-as minor",
+    "version:major": "standard-version --release-as major",
+    "version:auto": "standard-version"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0",
+    "standard-version": "^9.5.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^17.3.1",
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.3",
+    "nanoid": "^3.3.11",
+    "node-addon-api": "^8.7.0",
+    "node-gyp": "^12.2.0",
+    "openai": "^6.33.0",
+    "tesseract.js": "^5.1.0"
+  }
+}

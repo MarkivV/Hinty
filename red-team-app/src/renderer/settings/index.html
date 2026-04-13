@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      user-select: none;
+    }
+
+    #panel {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-radius: 20px;
+      overflow: hidden;
+      background:
+        linear-gradient(
+          160deg,
+          rgba(255,255,255,0.14) 0%,
+          rgba(255,255,255,0.04) 30%,
+          rgba(255,255,255,0.08) 70%,
+          rgba(255,255,255,0.12) 100%
+        );
+      backdrop-filter: blur(50px) saturate(1.8) brightness(1.05);
+      -webkit-backdrop-filter: blur(50px) saturate(1.8) brightness(1.05);
+      border: 0.5px solid rgba(255,255,255,0.22);
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.15),
+        0 2px 8px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        inset 0 -0.5px 0 rgba(0,0,0,0.05);
+    }
+
+    /* ── Header ── */
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      -webkit-app-region: drag;
+    }
+
+    #header-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: -0.2px;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+
+    .header-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 0.5px solid rgba(255,255,255,0.12);
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .header-btn:hover {
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ── Tabs ── */
+    #tabs {
+      display: flex;
+      gap: 2px;
+      padding: 0 16px 10px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 7px 0;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.4);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.1px;
+    }
+
+    .tab:hover {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%);
+      border: 0.5px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ── Tab Content ── */
+    .tab-content {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 16px 16px;
+      scrollbar-width: none;
+    }
+
+    .tab-content::-webkit-scrollbar { display: none; }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ── Form Elements ── */
+    .setting-group {
+      margin-bottom: 16px;
+    }
+
+    .setting-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .setting-description {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .glass-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 0.5px solid rgba(255,255,255,0.12);
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      color: rgba(255,255,255,0.9);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s ease;
+      letter-spacing: -0.1px;
+    }
+
+    .glass-input::placeholder {
+      color: rgba(255,255,255,0.25);
+    }
+
+    .glass-input:focus {
+      border-color: rgba(0,255,136,0.3);
+      box-shadow: 0 0 0 2px rgba(0,255,136,0.08);
+    }
+
+    .glass-input[type="password"] {
+      font-family: monospace;
+      letter-spacing: 2px;
+    }
+
+    /* ── Slider ── */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-value {
+      min-width: 44px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
+      border: 0.5px solid rgba(255,255,255,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+
+    /* ── Select / Dropdown ── */
+    .glass-select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 0.5px solid rgba(255,255,255,0.12);
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      color: rgba(255,255,255,0.9);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .glass-select option {
+      background: #1a1a2e;
+      color: #fff;
+    }
+
+    /* ── Hotkey Recorder ── */
+    .hotkey-field {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 0.5px solid rgba(255,255,255,0.12);
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      color: rgba(255,255,255,0.7);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.5px;
+    }
+
+    .hotkey-field:focus {
+      border-color: rgba(0,255,136,0.4);
+      box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+      color: rgba(0,255,136,0.9);
+    }
+
+    .hotkey-field.recording {
+      border-color: rgba(0,255,136,0.5);
+      color: rgba(0,255,136,0.8);
+    }
+
+    /* ── File List ── */
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 0.5px solid rgba(255,255,255,0.06);
+    }
+
+    .file-name {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 300px;
+    }
+
+    .file-remove {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: none;
+      background: rgba(255,80,80,0.1);
+      color: rgba(255,80,80,0.7);
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-remove:hover {
+      background: rgba(255,80,80,0.2);
+      color: rgba(255,80,80,1);
+    }
+
+    .upload-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.15);
+      background: transparent;
+      color: rgba(255,255,255,0.4);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .upload-btn:hover {
+      border-color: rgba(0,255,136,0.3);
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ── Save button ── */
+    #save-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 11px;
+      border-radius: 12px;
+      border: 0.5px solid rgba(0,255,136,0.2);
+      background: linear-gradient(135deg, rgba(0,255,136,0.15) 0%, rgba(0,255,136,0.06) 100%);
+      color: rgba(0,255,136,0.9);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: -0.1px;
+    }
+
+    #save-btn:hover {
+      background: rgba(0,255,136,0.2);
+      box-shadow: 0 4px 12px rgba(0,255,136,0.1);
+    }
+
+    #save-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ── Toast ── */
+    #save-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      padding: 8px 16px;
+      border-radius: 10px;
+      background: rgba(0,255,136,0.15);
+      border: 0.5px solid rgba(0,255,136,0.2);
+      color: rgba(0,255,136,0.9);
+      font-size: 12px;
+      font-weight: 500;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #save-toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <div id="header">
+      <div id="header-title">Settings</div>
+      <div class="header-controls">
+        <button class="header-btn" id="btn-close">✕</button>
+      </div>
+    </div>
+
+    <div id="tabs">
+      <button class="tab active" data-tab="general">General</button>
+      <button class="tab" data-tab="hotkeys">Hotkeys</button>
+      <button class="tab" data-tab="ai">AI</button>
+      <button class="tab" data-tab="knowledge">Knowledge</button>
+    </div>
+
+    <!-- General Tab -->
+    <div class="tab-content active" id="tab-general">
+      <div class="setting-group">
+        <div class="setting-label">Display Mode</div>
+        <select class="glass-select" id="display-mode">
+          <option value="hybrid">Hybrid (Auto)</option>
+          <option value="silent">Silent</option>
+          <option value="side_panel">Side Panel</option>
+        </select>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">Auto-hide Timeout</div>
+        <div class="setting-description">How long highlight frames stay visible</div>
+        <div class="slider-row">
+          <input type="range" id="auto-hide" min="1000" max="15000" step="500" value="5000" />
+          <span class="slider-value" id="auto-hide-value">5.0s</span>
+        </div>
+      </div>
+
+      <button id="save-btn">Save Settings</button>
+    </div>
+
+    <!-- Hotkeys Tab -->
+    <div class="tab-content" id="tab-hotkeys">
+      <div class="setting-group">
+        <div class="setting-label">Capture Trigger</div>
+        <input class="hotkey-field" id="hotkey-trigger" data-key="trigger" readonly
+               value="CommandOrControl+Shift+Space" placeholder="Click to record..." />
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">Emergency Hide / Show</div>
+        <input class="hotkey-field" id="hotkey-hide" data-key="emergencyHide" readonly
+               value="CommandOrControl+Shift+H" placeholder="Click to record..." />
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">Mode Cycle</div>
+        <input class="hotkey-field" id="hotkey-mode" data-key="modeCycle" readonly
+               value="CommandOrControl+Shift+M" placeholder="Click to record..." />
+      </div>
+
+      <button id="save-btn-hotkeys" class="upload-btn" style="margin-top:12px; border-style:solid; border-color:rgba(0,255,136,0.2); color:rgba(0,255,136,0.7);">
+        Save Hotkeys
+      </button>
+    </div>
+
+    <!-- AI Tab -->
+    <div class="tab-content" id="tab-ai">
+      <div class="setting-group">
+        <div class="setting-label">API Key</div>
+        <input class="glass-input" type="password" id="api-key" placeholder="sk-ant-..." />
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">Model</div>
+        <select class="glass-select" id="ai-model">
+          <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+          <option value="claude-opus-4-0-20250115">Claude Opus 4</option>
+          <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
+        </select>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">OCR Confidence Threshold</div>
+        <div class="setting-description">Below this → send screenshot to AI instead of OCR text</div>
+        <div class="slider-row">
+          <input type="range" id="ocr-threshold" min="30" max="95" step="5" value="70" />
+          <span class="slider-value" id="ocr-threshold-value">70%</span>
+        </div>
+      </div>
+
+      <button id="save-btn-ai" class="upload-btn" style="margin-top:12px; border-style:solid; border-color:rgba(0,255,136,0.2); color:rgba(0,255,136,0.7);">
+        Save AI Settings
+      </button>
+    </div>
+
+    <!-- Knowledge Base Tab -->
+    <div class="tab-content" id="tab-knowledge">
+      <div class="setting-group">
+        <div class="setting-label">Knowledge Base Files</div>
+        <div class="setting-description">Upload PDF or TXT files. AI will reference them in every prompt.</div>
+        <div class="file-list" id="file-list"></div>
+        <button class="upload-btn" id="upload-btn" style="margin-top:8px;">+ Upload File (PDF / TXT)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="save-toast">Settings saved</div>
+
+  <script>
+    const saveToast = document.getElementById('save-toast');
+
+    // ── Tab switching ──
+    document.querySelectorAll('.tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── Sliders ──
+    document.getElementById('auto-hide').addEventListener('input', (e) => {
+      document.getElementById('auto-hide-value').textContent = (e.target.value / 1000).toFixed(1) + 's';
+    });
+
+    document.getElementById('ocr-threshold').addEventListener('input', (e) => {
+      document.getElementById('ocr-threshold-value').textContent = e.target.value + '%';
+    });
+
+    // ── Hotkey recorder ──
+    document.querySelectorAll('.hotkey-field').forEach((field) => {
+      field.addEventListener('focus', () => {
+        field.classList.add('recording');
+        field.value = 'Press keys...';
+      });
+
+      field.addEventListener('blur', () => {
+        field.classList.remove('recording');
+        if (field.value === 'Press keys...') {
+          field.value = field.dataset.original || '';
+        }
+      });
+
+      field.addEventListener('keydown', (e) => {
+        e.preventDefault();
+        const parts = [];
+        if (e.metaKey || e.ctrlKey) parts.push('CommandOrControl');
+        if (e.shiftKey) parts.push('Shift');
+        if (e.altKey) parts.push('Alt');
+        if (e.key && !['Meta','Control','Shift','Alt'].includes(e.key)) {
+          parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+        }
+        if (parts.length > 1) {
+          field.value = parts.join('+');
+          field.dataset.original = field.value;
+          field.blur();
+        }
+      });
+    });
+
+    // ── Load settings from main ──
+    window.electronAPI.invoke('settings:get').then((settings) => {
+      if (!settings) return;
+      document.getElementById('display-mode').value = settings.displayMode;
+      document.getElementById('auto-hide').value = settings.autoHideTimeoutMs;
+      document.getElementById('auto-hide-value').textContent = (settings.autoHideTimeoutMs / 1000).toFixed(1) + 's';
+      document.getElementById('api-key').value = settings.apiKey || '';
+      document.getElementById('ai-model').value = settings.aiModel;
+      document.getElementById('ocr-threshold').value = settings.ocrConfidenceThreshold;
+      document.getElementById('ocr-threshold-value').textContent = settings.ocrConfidenceThreshold + '%';
+
+      document.getElementById('hotkey-trigger').value = settings.hotkeys.trigger;
+      document.getElementById('hotkey-trigger').dataset.original = settings.hotkeys.trigger;
+      document.getElementById('hotkey-hide').value = settings.hotkeys.emergencyHide;
+      document.getElementById('hotkey-hide').dataset.original = settings.hotkeys.emergencyHide;
+      document.getElementById('hotkey-mode').value = settings.hotkeys.modeCycle;
+      document.getElementById('hotkey-mode').dataset.original = settings.hotkeys.modeCycle;
+
+      renderFileList(settings.knowledgeBaseFiles || []);
+    });
+
+    function showSaveToast(msg) {
+      saveToast.textContent = msg || 'Settings saved';
+      saveToast.classList.remove('visible');
+      void saveToast.offsetWidth;
+      saveToast.classList.add('visible');
+      setTimeout(() => saveToast.classList.remove('visible'), 1500);
+    }
+
+    // ── Save buttons ──
+    document.getElementById('save-btn').addEventListener('click', () => {
+      window.electronAPI.invoke('settings:update', {
+        displayMode: document.getElementById('display-mode').value,
+        autoHideTimeoutMs: parseInt(document.getElementById('auto-hide').value),
+      });
+      showSaveToast();
+    });
+
+    document.getElementById('save-btn-hotkeys').addEventListener('click', () => {
+      window.electronAPI.invoke('settings:update', {
+        hotkeys: {
+          trigger: document.getElementById('hotkey-trigger').value,
+          emergencyHide: document.getElementById('hotkey-hide').value,
+          modeCycle: document.getElementById('hotkey-mode').value,
+        },
+      });
+      showSaveToast('Hotkeys saved — restart app to apply');
+    });
+
+    document.getElementById('save-btn-ai').addEventListener('click', () => {
+      window.electronAPI.invoke('settings:update', {
+        apiKey: document.getElementById('api-key').value,
+        aiModel: document.getElementById('ai-model').value,
+        ocrConfidenceThreshold: parseInt(document.getElementById('ocr-threshold').value),
+      });
+      showSaveToast('AI settings saved');
+    });
+
+    // ── Knowledge Base ──
+    function renderFileList(files) {
+      const list = document.getElementById('file-list');
+      list.innerHTML = '';
+      files.forEach((f, i) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        const name = f.split('/').pop() || f;
+        item.innerHTML = '<span class="file-name">' + name + '</span>' +
+          '<button class="file-remove" data-index="' + i + '">✕</button>';
+        list.appendChild(item);
+      });
+
+      list.querySelectorAll('.file-remove').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          window.electronAPI.send('settings:remove-file', parseInt(btn.dataset.index));
+        });
+      });
+    }
+
+    document.getElementById('upload-btn').addEventListener('click', () => {
+      window.electronAPI.send('settings:upload-file');
+    });
+
+    window.electronAPI.on('settings:files-updated', (files) => {
+      renderFileList(files);
+    });
+
+    // ── Close button ──
+    document.getElementById('btn-close').addEventListener('click', () => {
+      window.electronAPI.send('settings:close');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+release/
+build/
+certs/
+.env
+.DS_Store
+eng.traineddata
+*.p12
+*.pem

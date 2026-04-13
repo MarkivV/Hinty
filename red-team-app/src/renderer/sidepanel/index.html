@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:;">
+  <title>Hinty — Session</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *:focus, *:focus-visible { outline: none; }
+
+    /* ── Theme Variables ── */
+    :root, [data-theme="dark"] {
+      --bg: #050506;
+      --bg-surface: rgba(14, 14, 16, 0.92);
+      --bg-elevated: #111116;
+      --bg-hover: rgba(255,255,255,0.04);
+      --bg-active: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.06);
+      --border-strong: rgba(255,255,255,0.10);
+      --border-shell: rgba(255,255,255,0.08);
+      --text-primary: rgba(255,255,255,0.90);
+      --text-secondary: rgba(255,255,255,0.55);
+      --text-tertiary: rgba(255,255,255,0.30);
+      --text-quaternary: rgba(255,255,255,0.15);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-soft: rgba(59,130,246,0.12);
+      --primary-border: rgba(59,130,246,0.25);
+      --primary-text: rgba(59,130,246,0.90);
+      --danger: rgba(220,80,80,0.70);
+      --danger-soft: rgba(220,80,80,0.10);
+      --success: rgba(52,211,153,0.70);
+      --success-soft: rgba(52,211,153,0.12);
+      --scrollbar: rgba(255,255,255,0.06);
+      --code-bg: rgba(255,255,255,0.03);
+      --code-border: rgba(255,255,255,0.06);
+      --input-bg: rgba(255,255,255,0.03);
+      --input-border: rgba(255,255,255,0.08);
+      --shell-bg: var(--bg-surface);
+      --shell-shadow: none;
+      --btn-primary-bg: var(--primary);
+      --btn-primary-text: #ffffff;
+      --send-btn-bg: var(--primary);
+      --send-btn-text: #ffffff;
+      --user-bubble-bg: var(--primary);
+      --user-bubble-text: #ffffff;
+      --assist-bg: linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0.06) 100%);
+      --assist-border: rgba(59,130,246,0.30);
+      --assist-color: rgba(59,130,246,0.95);
+      --assist-hover-bg: linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(59,130,246,0.10) 100%);
+      --assist-hover-border: rgba(59,130,246,0.40);
+      --dropdown-bg: rgba(24,24,28,0.96);
+      --float-bg: rgba(18,18,22,0.88);
+      --float-border: rgba(255,255,255,0.08);
+      --timer-active: #f59e0b;
+      --silver-border: rgba(180,185,210,0.18);
+      --silver-glow: rgba(180,185,210,0.08);
+    }
+
+    [data-theme="light"] {
+      --bg: #f8f9fa;
+      --bg-surface: rgba(255, 255, 255, 0.94);
+      --bg-elevated: #ffffff;
+      --bg-hover: rgba(0,0,0,0.03);
+      --bg-active: rgba(0,0,0,0.05);
+      --border: rgba(0,0,0,0.06);
+      --border-strong: rgba(0,0,0,0.12);
+      --border-shell: rgba(0,0,0,0.10);
+      --text-primary: rgba(0,0,0,0.88);
+      --text-secondary: rgba(0,0,0,0.65);
+      --text-tertiary: rgba(0,0,0,0.50);
+      --text-quaternary: rgba(0,0,0,0.25);
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: rgba(37,99,235,0.08);
+      --primary-border: rgba(37,99,235,0.22);
+      --primary-text: #2563eb;
+      --danger: rgba(220,60,60,0.80);
+      --danger-soft: rgba(220,60,60,0.06);
+      --success: rgba(22,163,74,0.80);
+      --success-soft: rgba(22,163,74,0.08);
+      --scrollbar: rgba(0,0,0,0.08);
+      --code-bg: rgba(0,0,0,0.03);
+      --code-border: rgba(0,0,0,0.08);
+      --input-bg: rgba(0,0,0,0.02);
+      --input-border: rgba(0,0,0,0.10);
+      --shell-bg: var(--bg-surface);
+      --shell-shadow: none;
+      --btn-primary-bg: var(--primary);
+      --btn-primary-text: #ffffff;
+      --send-btn-bg: var(--primary);
+      --send-btn-text: #ffffff;
+      --user-bubble-bg: var(--primary);
+      --user-bubble-text: #ffffff;
+      --assist-bg: linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.04) 100%);
+      --assist-border: rgba(37,99,235,0.22);
+      --assist-color: #2563eb;
+      --assist-hover-bg: linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(37,99,235,0.08) 100%);
+      --assist-hover-border: rgba(37,99,235,0.32);
+      --dropdown-bg: rgba(255,255,255,0.96);
+      --float-bg: rgba(255,255,255,0.90);
+      --float-border: rgba(0,0,0,0.08);
+      --timer-active: #d97706;
+      --silver-border: rgba(120,120,140,0.22);
+      --silver-glow: rgba(120,120,140,0.10);
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      user-select: none;
+      color: var(--text-primary);
+      letter-spacing: -0.011em;
+    }
+
+    /* ── Outer layout ── */
+    #outer-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 6px;
+      pointer-events: none;
+    }
+
+    /* ── Floating bar (above shell) ── */
+    #float-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2px 6px;
+      flex-shrink: 0;
+      pointer-events: auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .float-pill {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 4px 6px;
+      border-radius: 50px;
+      background: var(--float-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 0.5px solid var(--float-border);
+    }
+
+    .float-ctrl {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .float-ctrl:hover { color: var(--text-secondary); background: var(--bg-active); }
+    .float-ctrl.close-btn:hover { color: var(--danger); background: var(--danger-soft); }
+    .float-ctrl.drag-handle { cursor: grab; }
+    .float-ctrl.drag-handle:active { cursor: grabbing; }
+
+    /* ── Timer in floating bar ── */
+    #float-timer {
+      position: relative;
+    }
+    .ft-btn {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ft-btn:hover { color: var(--text-secondary); background: var(--bg-active); }
+
+    .ft-time {
+      font-size: 11px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      padding: 0 4px;
+      letter-spacing: 0.02em;
+    }
+    .ft-time.focus { color: var(--timer-active); }
+    .ft-time.break { color: var(--success); }
+    .ft-time.paused { color: var(--text-tertiary); }
+
+    /* Timer active group: slides open when timer is running */
+    .ft-active-group {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      max-width: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+    .ft-active-group.show {
+      max-width: 130px;
+      opacity: 1;
+    }
+    /* Hide clock icon when timer is active */
+    #sp-timer-toggle {
+      max-width: 22px;
+      opacity: 1;
+      overflow: hidden;
+      transition: max-width 0.3s ease, opacity 0.2s ease;
+    }
+    #float-timer.timer-active #sp-timer-toggle {
+      max-width: 0;
+      opacity: 0;
+    }
+
+    /* Timer dropdown */
+    .ft-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 190px;
+      background: var(--dropdown-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 10px;
+      z-index: 200;
+      display: none;
+    }
+    .ft-dropdown.open { display: block; }
+
+    .ft-presets {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .ft-preset {
+      flex: 1;
+      padding: 5px 0;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-tertiary);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .ft-preset:hover { border-color: var(--border-strong); color: var(--text-secondary); }
+    .ft-preset.active { border-color: var(--primary-border); color: var(--primary-text); background: var(--primary-soft); }
+
+    .ft-start-btn {
+      width: 100%;
+      padding: 6px;
+      border-radius: 50px;
+      border: 1px solid var(--primary-border);
+      background: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(59,130,246,0.03) 100%);
+      color: var(--primary-text);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ft-start-btn:hover {
+      border-color: rgba(59,130,246,0.40);
+      background: linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0.06) 100%);
+    }
+
+    /* Invisibility eye button active state */
+    .float-ctrl.invis-active {
+      color: var(--primary-text);
+      background: var(--primary-soft);
+    }
+
+    /* ── Main shell ── */
+    #shell {
+      display: flex;
+      flex-direction: column;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      background: var(--shell-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 0.5px solid var(--border-shell);
+      box-shadow: var(--shell-shadow);
+      max-height: calc(100% - 44px);
+      flex-shrink: 1;
+      min-height: 0;
+      pointer-events: auto;
+    }
+
+    /* ── Chat ── */
+    #chat-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar) transparent;
+      min-height: 0;
+      transition: max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.35s ease,
+                  padding 0.4s ease;
+      max-height: 600px;
+      opacity: 1;
+    }
+    #chat-scroll::-webkit-scrollbar { width: 3px; }
+    #chat-scroll::-webkit-scrollbar-track { background: transparent; }
+    #chat-scroll::-webkit-scrollbar-thumb { background: var(--input-border); border-radius: 2px; }
+
+    #chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #chat-messages:empty::before {
+      content: attr(data-empty-hint);
+      color: var(--text-quaternary);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    /* ── Compact mode ── */
+    #shell.compact #chat-scroll {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    #shell.compact {
+      box-shadow: none;
+      border-color: var(--border);
+    }
+
+    /* Disable transitions on first load to prevent flash */
+    .no-transition,
+    .no-transition *,
+    .no-transition #chat-scroll {
+      transition: none !important;
+    }
+
+    /* ── Messages ── */
+    .msg { display: flex; flex-direction: column; gap: 4px; }
+
+    .msg.user { align-items: flex-end; }
+
+    .msg.user .msg-body {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: var(--user-bubble-bg);
+      color: var(--user-bubble-text);
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 85%;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .msg-meta {
+      font-size: 11px;
+      color: var(--text-quaternary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+    .msg-meta:hover { color: var(--text-secondary); }
+    .msg-meta svg { flex-shrink: 0; }
+
+    .msg.ai { align-items: flex-start; }
+
+    .msg.ai .msg-body {
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-primary);
+      word-wrap: break-word;
+      padding: 0 2px;
+      max-width: 95%;
+    }
+
+    /* ── Markdown in AI messages ── */
+    .msg.ai .msg-body p { margin: 0 0 8px; }
+    .msg.ai .msg-body p:last-child { margin-bottom: 0; }
+    .msg.ai .msg-body h1, .msg.ai .msg-body h2, .msg.ai .msg-body h3 {
+      font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 14px 0 6px;
+    }
+    .msg.ai .msg-body h1:first-child, .msg.ai .msg-body h2:first-child, .msg.ai .msg-body h3:first-child { margin-top: 0; }
+    .msg.ai .msg-body ul, .msg.ai .msg-body ol { margin: 6px 0; padding-left: 20px; }
+    .msg.ai .msg-body li { margin-bottom: 3px; }
+    .msg.ai .msg-body li:last-child { margin-bottom: 0; }
+    .msg.ai .msg-body code {
+      font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12px; background: var(--code-bg); border: 0.5px solid var(--code-border);
+      border-radius: 4px; padding: 1px 5px;
+    }
+    .msg.ai .msg-body .code-block-wrap { position: relative; margin: 8px 0; }
+    .msg.ai .msg-body .code-block-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 12px; border-radius: 8px 8px 0 0;
+      background: var(--bg-active); border: 0.5px solid var(--code-border); border-bottom: none;
+    }
+    .msg.ai .msg-body .code-lang {
+      font-size: 10px; font-weight: 500; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      font-family: 'SF Mono', 'JetBrains Mono', monospace;
+    }
+    .msg.ai .msg-body .copy-btn {
+      padding: 2px 8px; border-radius: 4px; border: none; background: var(--bg-active);
+      color: var(--text-tertiary); font-family: inherit; font-size: 10px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s ease; user-select: none;
+    }
+    .msg.ai .msg-body .copy-btn:hover { background: var(--border-strong); color: var(--text-secondary); }
+    .msg.ai .msg-body .copy-btn.copied { color: var(--success); }
+    .msg.ai .msg-body pre {
+      margin: 0; border-radius: 0 0 8px 8px; background: var(--code-bg);
+      border: 0.5px solid var(--code-border); border-top: none; padding: 12px 14px;
+      overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--scrollbar) transparent;
+    }
+    .msg.ai .msg-body .code-block-wrap + p, .msg.ai .msg-body p + .code-block-wrap { margin-top: 8px; }
+    .msg.ai .msg-body > pre { border-radius: 8px; border: 0.5px solid var(--code-border); margin: 8px 0; }
+    .msg.ai .msg-body pre code {
+      background: none; border: none; padding: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary);
+    }
+    .katex-display { margin: 10px 0; overflow-x: auto; }
+    .katex { font-size: 1em; }
+    .msg.ai .msg-body blockquote { border-left: 2px solid var(--border-strong); padding-left: 12px; margin: 8px 0; color: var(--text-secondary); }
+    .msg.ai .msg-body strong { font-weight: 600; color: var(--text-primary); }
+    .msg.ai .msg-body hr { border: none; border-top: 0.5px solid var(--input-border); margin: 12px 0; }
+    .msg.ai .msg-body table { border-collapse: collapse; margin: 8px 0; font-size: 12px; width: 100%; }
+    .msg.ai .msg-body th, .msg.ai .msg-body td { border: 0.5px solid var(--input-border); padding: 6px 10px; text-align: left; }
+    .msg.ai .msg-body th { background: var(--bg-hover); font-weight: 600; color: var(--text-secondary); }
+
+    /* ── Screenshot modal ── */
+    #ss-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.80); backdrop-filter: blur(8px);
+      z-index: 200; align-items: center; justify-content: center; cursor: pointer;
+      pointer-events: auto;
+    }
+    #ss-modal.visible { display: flex; }
+    #ss-modal img { max-width: 90%; max-height: 85%; border-radius: 10px; }
+
+    /* ── Thinking dots ── */
+    .thinking-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0;
+    }
+    .thinking-dots span {
+      display: block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      animation: dotPulse 1.2s ease-in-out infinite;
+    }
+    .thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .thinking-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes dotPulse {
+      0%, 60%, 100% { opacity: 0.25; transform: scale(0.85); }
+      30% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Bottom area ── */
+    #bottom-area {
+      flex-shrink: 0;
+      border-top: 0.5px solid var(--border);
+      padding: 10px 14px 12px;
+    }
+
+    /* ── Quick actions ── */
+    #quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    #template-buttons { display: contents; }
+
+    .qbtn {
+      padding: 5px 11px;
+      border-radius: 50px;
+      border: 0.5px solid var(--border-strong);
+      background: var(--bg-hover);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .qbtn:hover {
+      background: var(--bg-active);
+      color: var(--text-primary);
+      border-color: var(--primary-border);
+    }
+    .qbtn:active { transform: scale(0.97); }
+
+    .qbtn.assist {
+      background: var(--assist-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 0.5px solid var(--assist-border);
+      color: var(--assist-color);
+      font-weight: 600;
+      padding: 6px 16px;
+      box-shadow: 0 0 14px rgba(59,130,246,0.10), inset 0 0.5px 0 rgba(255,255,255,0.08);
+      text-shadow: 0 0 10px rgba(59,130,246,0.15);
+    }
+    .qbtn.assist:hover {
+      background: var(--assist-hover-bg);
+      border-color: var(--assist-hover-border);
+      color: var(--assist-color);
+      box-shadow: 0 0 22px rgba(59,130,246,0.15), inset 0 0.5px 0 rgba(255,255,255,0.12);
+    }
+
+    .q-sep {
+      color: var(--text-quaternary);
+      font-size: 8px;
+      margin: 0 1px;
+    }
+
+    /* ── Template selector ── */
+    #template-selector {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-bottom: 6px;
+      position: relative;
+    }
+    #template-selector-btn {
+      padding: 2px 8px; border-radius: 4px; border: none; background: transparent;
+      color: var(--text-tertiary); font-family: inherit; font-size: 10px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 3px;
+    }
+    #template-selector-btn:hover { background: var(--bg-active); color: var(--text-secondary); }
+
+    #template-dropdown {
+      display: none;
+      position: fixed;
+      min-width: 140px;
+      background: var(--dropdown-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 4px;
+      z-index: 300;
+      pointer-events: auto;
+    }
+    #template-dropdown.visible { display: block; }
+
+    .tpl-option {
+      display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+      border-radius: 5px; border: none; background: transparent;
+      color: var(--text-secondary); font-family: inherit; font-size: 11px;
+      cursor: pointer; width: 100%; text-align: left; transition: all 0.1s ease;
+    }
+    .tpl-option:hover { background: var(--bg-active); color: var(--text-primary); }
+    .tpl-option.active { color: var(--text-primary); }
+    .tpl-check { font-size: 10px; width: 14px; text-align: center; flex-shrink: 0; }
+
+    /* ── Chat input ── */
+    #chat-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #chat-input-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      border-radius: 50px;
+      border: 1px solid var(--silver-border);
+      background: var(--input-bg);
+      padding: 0 4px 0 16px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 0 0 0.5px var(--silver-glow);
+    }
+    #chat-input-wrap:focus-within {
+      border-color: var(--primary-border);
+      box-shadow: 0 0 0 2px var(--primary-soft), 0 0 8px rgba(59,130,246,0.08);
+    }
+
+    #chat-input {
+      flex: 1; padding: 9px 0; border: none; background: transparent;
+      color: var(--text-primary); font-family: inherit; font-size: 13px; outline: none;
+    }
+    #chat-input::placeholder { color: var(--text-quaternary); }
+
+    .input-hint {
+      display: flex; align-items: center; gap: 2px; margin-right: 6px; flex-shrink: 0;
+    }
+    .input-hint kbd {
+      font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 10px;
+      padding: 2px 5px; border-radius: 4px; border: 1px solid var(--input-border);
+      background: var(--bg-hover); color: var(--text-quaternary); line-height: 1;
+    }
+
+    /* Frosted send button */
+    #send-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 0.5px solid rgba(59,130,246,0.35);
+      background: linear-gradient(135deg, rgba(59,130,246,0.85) 0%, rgba(37,99,235,0.95) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(59,130,246,0.20), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    #send-btn:hover {
+      background: linear-gradient(135deg, rgba(59,130,246,0.95) 0%, rgba(37,99,235,1) 100%);
+      box-shadow: 0 0 24px rgba(59,130,246,0.30), inset 0 1px 0 rgba(255,255,255,0.20);
+    }
+    #send-btn:active { transform: scale(0.93); }
+
+    /* ── Status footer (just hide hint) ── */
+    #status-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 6px 0 0;
+      font-size: 10px;
+      color: var(--text-quaternary);
+    }
+
+    /* ── Invisible mode ── */
+    #shell.invisible-mode {
+      border: 1.5px dashed var(--primary-border);
+    }
+
+    /* Hidden element for header-status references */
+    #header-status { display: none; }
+  </style>
+</head>
+<body>
+  <div id="outer-wrap">
+    <!-- Floating bar: timer pill (left) + controls pill (right) -->
+    <div id="float-row">
+      <div class="float-pill" id="float-timer">
+        <button class="ft-btn" id="sp-timer-toggle" title="Timer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
+        </button>
+        <div class="ft-active-group" id="ft-active-group">
+          <span class="ft-time" id="sp-timer-time"></span>
+          <button class="ft-btn" id="sp-timer-playpause" title="Pause">
+            <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="3" x2="5" y2="13"/><line x1="11" y1="3" x2="11" y2="13"/></svg>
+          </button>
+          <button class="ft-btn" id="sp-timer-stop" title="Stop">
+            <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+          </button>
+        </div>
+        <div class="ft-dropdown" id="sp-timer-dropdown">
+          <div class="ft-presets">
+            <button class="ft-preset active" data-minutes="25">25m</button>
+            <button class="ft-preset" data-minutes="50">50m</button>
+            <button class="ft-preset" data-minutes="90">90m</button>
+          </div>
+          <button class="ft-start-btn" id="sp-timer-start">Start Focus</button>
+        </div>
+      </div>
+
+      <div class="float-pill" id="float-controls">
+        <button class="float-ctrl" id="sp-invis-toggle" title="Toggle invisible mode">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="float-ctrl drag-handle" id="btn-drag" title="Drag to move">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+            <circle cx="4.5" cy="3.5" r="1.2"/><circle cx="11.5" cy="3.5" r="1.2"/>
+            <circle cx="4.5" cy="8" r="1.2"/><circle cx="11.5" cy="8" r="1.2"/>
+            <circle cx="4.5" cy="12.5" r="1.2"/><circle cx="11.5" cy="12.5" r="1.2"/>
+          </svg>
+        </button>
+        <button class="float-ctrl close-btn" id="btn-end-session" title="End session">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Template dropdown (outside shell, opens downward) -->
+    <div id="template-dropdown"></div>
+
+    <!-- Main panel -->
+    <div id="shell" class="compact no-transition">
+      <span id="header-status" style="display:none;"></span>
+      <div id="chat-scroll">
+        <div id="chat-messages"></div>
+      </div>
+
+      <div id="bottom-area">
+        <div id="template-selector">
+          <button id="template-selector-btn">
+            <span id="template-name">General</span>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="2 3 4 5 6 3"/></svg>
+          </button>
+        </div>
+        <div id="quick-actions">
+          <button class="qbtn assist" id="btn-assist">Assist</button>
+          <div id="template-buttons"></div>
+        </div>
+
+        <div id="chat-bar">
+          <div id="chat-input-wrap">
+            <input type="text" id="chat-input" placeholder="Ask anything..." autocomplete="off" />
+            <div class="input-hint" id="trigger-hint"></div>
+          </div>
+          <button id="send-btn">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="13" x2="8" y2="3"/><polyline points="4 7 8 3 12 7"/></svg>
+          </button>
+        </div>
+
+        <div id="status-footer">
+          <div class="input-hint" id="hide-hint"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ss-modal">
+    <img id="ss-modal-img" src="" />
+  </div>
+
+  <script>
+    // ── Theme system ──
+    function applyThemeFromSettings() {
+      window.electronAPI.invoke('settings:get').then(s => {
+        if (!s) return;
+        let theme = s.theme || 'dark';
+        if (theme === 'system') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      });
+    }
+    applyThemeFromSettings();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      applyThemeFromSettings();
+    });
+
+    // ── Remove no-transition after first paint to enable animations ──
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById('shell').classList.remove('no-transition');
+      });
+    });
+
+    // ── Click-through: transparent areas pass clicks to apps below ──
+    // Electron setIgnoreMouseEvents(true, {forward:true}) makes the whole window
+    // click-through but still receives mousemove. We re-enable clicks when the
+    // cursor enters visible UI elements.
+    const interactiveRoots = document.querySelectorAll('#float-row .float-pill, #shell, .ft-dropdown, #template-dropdown, #ss-modal');
+    interactiveRoots.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        window.electronAPI.send('panel:set-clickthrough', false);
+      });
+      el.addEventListener('mouseleave', () => {
+        window.electronAPI.send('panel:set-clickthrough', true);
+      });
+    });
+
+    // ── Markdown + LaTeX rendering ──
+    if (typeof marked !== 'undefined') {
+      marked.use({ breaks: true, gfm: true });
+    }
+
+    function extractLatex(text) {
+      const placeholders = [];
+      let idx = 0;
+      text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
+        const key = '\x00LATEX' + idx++ + '\x00';
+        placeholders.push({ key, tex: tex.trim(), display: true });
+        return key;
+      });
+      text = text.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => {
+        const key = '\x00LATEX' + idx++ + '\x00';
+        placeholders.push({ key, tex: tex.trim(), display: true });
+        return key;
+      });
+      text = text.replace(/(?<![\\$`])\$([^\$\n]+?)\$(?!`)/g, (_, tex) => {
+        const key = '\x00LATEX' + idx++ + '\x00';
+        placeholders.push({ key, tex: tex.trim(), display: false });
+        return key;
+      });
+      text = text.replace(/\\\((.+?)\\\)/g, (_, tex) => {
+        const key = '\x00LATEX' + idx++ + '\x00';
+        placeholders.push({ key, tex: tex.trim(), display: false });
+        return key;
+      });
+      return { text, placeholders };
+    }
+
+    function restoreLatex(html, placeholders) {
+      if (typeof katex === 'undefined') {
+        placeholders.forEach(p => {
+          const delim = p.display ? '$$' : '$';
+          html = html.replace(p.key, delim + p.tex + delim);
+        });
+        return html;
+      }
+      placeholders.forEach(p => {
+        try {
+          const rendered = p.display
+            ? '<div class="katex-display">' + katex.renderToString(p.tex, { displayMode: true, throwOnError: false }) + '</div>'
+            : katex.renderToString(p.tex, { displayMode: false, throwOnError: false });
+          html = html.replace(p.key, rendered);
+        } catch (e) {
+          const delim = p.display ? '$$' : '$';
+          html = html.replace(p.key, delim + p.tex + delim);
+        }
+      });
+      return html;
+    }
+
+    function renderMarkdown(text) {
+      const { text: safeText, placeholders } = extractLatex(text);
+      let html;
+      if (typeof marked !== 'undefined') {
+        try { html = marked.parse(safeText); } catch (e) { html = null; }
+      }
+      if (!html) {
+        html = escapeHtml(safeText).replace(/\n/g, '<br>');
+      }
+      html = restoreLatex(html, placeholders);
+      return html;
+    }
+
+    // ── Code block copy buttons ──
+    function enhanceCodeBlocks(container) {
+      const pres = container.querySelectorAll('pre');
+      pres.forEach((pre) => {
+        if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrap')) return;
+        const code = pre.querySelector('code');
+        const lang = code ? (code.className.match(/language-(\w+)/) || [])[1] || '' : '';
+        const wrap = document.createElement('div');
+        wrap.className = 'code-block-wrap';
+        const header = document.createElement('div');
+        header.className = 'code-block-header';
+        header.innerHTML =
+          '<span class="code-lang">' + (lang || 'code') + '</span>' +
+          '<button class="copy-btn">Copy</button>';
+        pre.parentNode.insertBefore(wrap, pre);
+        wrap.appendChild(header);
+        wrap.appendChild(pre);
+        const btn = header.querySelector('.copy-btn');
+        btn.addEventListener('click', () => {
+          const text = code ? code.textContent : pre.textContent;
+          navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.textContent = 'Copy';
+              btn.classList.remove('copied');
+            }, 1500);
+          });
+        });
+      });
+    }
+
+    // ── DOM refs ──
+    const chatMessages = document.getElementById('chat-messages');
+    const chatScroll = document.getElementById('chat-scroll');
+    const chatInput = document.getElementById('chat-input');
+    const ssModal = document.getElementById('ss-modal');
+    const ssModalImg = document.getElementById('ss-modal-img');
+    const shell = document.getElementById('shell');
+
+    let currentAiMsg = null;
+    let currentAiText = '';
+    let renderPending = false;
+    let lastScreenshotBase64 = null;
+
+    // ── Screenshot modal — click backdrop (not image) to close ──
+    ssModal.addEventListener('click', (e) => {
+      if (e.target === ssModal) ssModal.classList.remove('visible');
+    });
+
+    function openScreenshot(base64) {
+      ssModalImg.src = 'data:image/jpeg;base64,' + base64;
+      ssModal.classList.add('visible');
+    }
+
+    // ── Smooth expand helper ──
+    function expandPanel() {
+      if (!shell.classList.contains('compact')) return;
+      // Small delay so the send action registers first, then panel opens
+      setTimeout(() => { shell.classList.remove('compact'); }, 80);
+    }
+
+    // ── Add user message ──
+    function addUserMessage(text, screenshotBase64) {
+      const msg = document.createElement('div');
+      msg.className = 'msg user';
+      let html = '<div class="msg-body">' + escapeHtml(text) + '</div>';
+      if (screenshotBase64) {
+        html += '<div class="msg-meta" data-b64="' + screenshotBase64 + '">' +
+          '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6.5" r="1.5"/><path d="M1.5 11l3.5-3.5L8 10.5l2.5-2.5 4 4"/></svg>' +
+          ' Sent with screenshot</div>';
+      }
+      msg.innerHTML = html;
+      chatMessages.appendChild(msg);
+      const meta = msg.querySelector('.msg-meta');
+      if (meta) {
+        meta.addEventListener('click', () => openScreenshot(meta.dataset.b64));
+      }
+      scrollToBottom();
+    }
+
+    // ── AI message lifecycle ──
+    function startAiMessage() {
+      const msg = document.createElement('div');
+      msg.className = 'msg ai';
+      msg.innerHTML = '<div class="msg-body"><div class="thinking-dots"><span></span><span></span><span></span></div></div>';
+      chatMessages.appendChild(msg);
+      currentAiMsg = msg.querySelector('.msg-body');
+      currentAiText = '';
+      renderPending = false;
+      scrollToBottom();
+    }
+
+    function renderAiBody(final) {
+      if (!currentAiMsg) return;
+      const html = renderMarkdown(currentAiText);
+      currentAiMsg.innerHTML = html;
+      if (final) { enhanceCodeBlocks(currentAiMsg); }
+      scrollToBottom();
+    }
+
+    function scrollToBottom() {
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ── Screenshot arrives ──
+    window.electronAPI.on('session:screenshot', (base64) => {
+      lastScreenshotBase64 = base64;
+      const userMsgs = chatMessages.querySelectorAll('.msg.user');
+      const last = userMsgs[userMsgs.length - 1];
+      if (last && !last.querySelector('.msg-meta')) {
+        const meta = document.createElement('div');
+        meta.className = 'msg-meta';
+        meta.dataset.b64 = base64;
+        meta.innerHTML = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6.5" r="1.5"/><path d="M1.5 11l3.5-3.5L8 10.5l2.5-2.5 4 4"/></svg> Sent with screenshot';
+        last.appendChild(meta);
+        meta.addEventListener('click', () => openScreenshot(base64));
+      }
+    });
+
+    // ── Hotkey trigger ──
+    window.electronAPI.on('session:trigger-message', (text) => {
+      setTimeout(() => {
+        expandPanel();
+        addUserMessage(text, lastScreenshotBase64);
+        startAiMessage();
+      }, 50);
+    });
+
+    // ── Stream tokens (throttled markdown render) ──
+    window.electronAPI.on('sidepanel:stream-token', (token) => {
+      if (!currentAiMsg) { startAiMessage(); }
+      currentAiText += token;
+      if (!renderPending) {
+        renderPending = true;
+        requestAnimationFrame(() => {
+          renderPending = false;
+          renderAiBody(false);
+        });
+      }
+    });
+
+    window.electronAPI.on('ai:response-complete', () => {
+      if (currentAiMsg) { renderAiBody(true); }
+      currentAiMsg = null;
+      currentAiText = '';
+    });
+
+    window.electronAPI.on('ai:error', (err) => {
+      if (currentAiMsg) {
+        currentAiMsg.innerHTML = '<p style="color:var(--danger);">Error: ' + escapeHtml(String(err)) + '</p>';
+      }
+      currentAiMsg = null;
+      currentAiText = '';
+    });
+
+    // ── Session cleared ──
+    window.electronAPI.on('session:cleared', () => {
+      // Instantly collapse — no transition so old content isn't visible
+      shell.classList.add('no-transition');
+      chatMessages.innerHTML = '';
+      currentAiMsg = null;
+      currentAiText = '';
+      renderPending = false;
+      lastScreenshotBase64 = null;
+      shell.classList.add('compact');
+      // Re-enable transitions after instant collapse
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          shell.classList.remove('no-transition');
+        });
+      });
+    });
+
+    // ── Restore messages (continue session) ──
+    window.electronAPI.on('session:restore-messages', (messages) => {
+      shell.classList.remove('compact');
+      chatMessages.innerHTML = '';
+      currentAiMsg = null;
+      currentAiText = '';
+      renderPending = false;
+      lastScreenshotBase64 = null;
+      if (!messages || messages.length === 0) return;
+      messages.forEach((m) => {
+        if (m.role === 'user') {
+          addUserMessage(m.content_text || '', m.screenshot || null);
+        } else if (m.role === 'assistant') {
+          const msg = document.createElement('div');
+          msg.className = 'msg ai';
+          msg.innerHTML = '<div class="msg-body">' + renderMarkdown(m.content_text || '') + '</div>';
+          chatMessages.appendChild(msg);
+          enhanceCodeBlocks(msg);
+        }
+      });
+      scrollToBottom();
+    });
+
+    // ── End session ──
+    document.getElementById('btn-end-session').addEventListener('click', () => {
+      window.electronAPI.send('session:end');
+    });
+
+    // ── Custom drag ──
+    const dragBtn = document.getElementById('btn-drag');
+    let isDragging = false;
+    dragBtn.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      isDragging = true;
+      window.electronAPI.send('panel:start-drag', e.screenX, e.screenY);
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      window.electronAPI.send('panel:drag-move', e.screenX, e.screenY);
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
+
+    // ── Send message ──
+    function sendMessage(text) {
+      if (!text.trim()) return;
+      expandPanel();
+      addUserMessage(text, null);
+      startAiMessage();
+      window.electronAPI.send('sidepanel:chat-send', { type: 'message', text });
+    }
+
+    document.getElementById('send-btn').addEventListener('click', () => {
+      sendMessage(chatInput.value);
+      chatInput.value = '';
+    });
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage(chatInput.value);
+        chatInput.value = '';
+      }
+    });
+
+    // Focus management
+    chatInput.addEventListener('mousedown', () => {
+      window.electronAPI.send('panel:request-focus');
+    });
+    chatInput.addEventListener('blur', () => {
+      window.electronAPI.send('panel:release-focus');
+    });
+
+    // ── Assist button ──
+    document.getElementById('btn-assist').addEventListener('click', () => {
+      window.electronAPI.send('session:trigger-assist');
+    });
+
+    // ── Template system ──
+    let templates = [];
+    let activeTemplateId = 'tpl-general';
+    const templateBtnsContainer = document.getElementById('template-buttons');
+    const templateNameLabel = document.getElementById('template-name');
+    const templateDropdown = document.getElementById('template-dropdown');
+    const templateSelectorBtn = document.getElementById('template-selector-btn');
+
+    function renderTemplateButtons() {
+      const template = templates.find(t => t.id === activeTemplateId);
+      if (!template) return;
+      templateNameLabel.textContent = template.name;
+      templateBtnsContainer.innerHTML = '';
+
+      template.buttons.forEach((btn, i) => {
+        const el = document.createElement('button');
+        el.className = 'qbtn';
+        el.dataset.buttonId = btn.id;
+        el.textContent = btn.label;
+        el.addEventListener('click', () => {
+          expandPanel();
+          addUserMessage(btn.label, null);
+          startAiMessage();
+          window.electronAPI.send('sidepanel:chat-send', { type: 'action', action: btn.id });
+        });
+        templateBtnsContainer.appendChild(el);
+      });
+    }
+
+    function renderTemplateDropdown() {
+      templateDropdown.innerHTML = '';
+      templates.forEach((tpl) => {
+        const opt = document.createElement('button');
+        opt.className = 'tpl-option' + (tpl.id === activeTemplateId ? ' active' : '');
+        opt.innerHTML = '<span class="tpl-check">' + (tpl.id === activeTemplateId ? '\u2713' : '') + '</span>' + tpl.name;
+        opt.addEventListener('click', () => {
+          activeTemplateId = tpl.id;
+          templateDropdown.classList.remove('visible');
+          renderTemplateButtons();
+          window.electronAPI.invoke('settings:update', { activeTemplateId: tpl.id });
+        });
+        templateDropdown.appendChild(opt);
+      });
+    }
+
+    templateSelectorBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      renderTemplateDropdown();
+      // Position dropdown using fixed coords, open downward from button
+      const rect = templateSelectorBtn.getBoundingClientRect();
+      templateDropdown.style.left = rect.left + 'px';
+      templateDropdown.style.top = (rect.bottom + 4) + 'px';
+      templateDropdown.style.bottom = 'auto';
+      templateDropdown.classList.toggle('visible');
+    });
+
+    document.addEventListener('click', () => {
+      templateDropdown.classList.remove('visible');
+    });
+
+    // Load templates on startup
+    window.electronAPI.invoke('settings:get').then((s) => {
+      if (s && s.promptTemplates) {
+        templates = s.promptTemplates;
+        activeTemplateId = s.activeTemplateId || 'tpl-general';
+        renderTemplateButtons();
+      }
+    });
+
+    // Update templates and theme when settings change
+    window.electronAPI.on('settings:changed', (s) => {
+      if (s && s.promptTemplates) {
+        templates = s.promptTemplates;
+        activeTemplateId = s.activeTemplateId || activeTemplateId;
+        renderTemplateButtons();
+      }
+      if (s && s.theme) {
+        let theme = s.theme;
+        if (theme === 'system') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      // Update invisibility state
+      if (s) updateInvisibleMode(s);
+    });
+
+    // ── Dynamic hotkey hints ──
+    const SYMBOL_MAP = {
+      'CommandOrControl': '\u2318', 'Command': '\u2318', 'Control': '\u2303',
+      'Ctrl': '\u2303', 'Shift': '\u21E7', 'Alt': '\u2325', 'Option': '\u2325', 'Space': '\u2423',
+    };
+
+    function renderHotkeyHint(accelerator, suffix) {
+      if (!accelerator) return '';
+      const parts = accelerator.split('+');
+      let html = parts.map(p => '<kbd>' + (SYMBOL_MAP[p] || p) + '</kbd>').join('');
+      if (suffix) html += ' ' + suffix;
+      return html;
+    }
+
+    function hotkeyToSymbols(accelerator) {
+      if (!accelerator) return '';
+      return accelerator.split('+').map(p => SYMBOL_MAP[p] || p).join('');
+    }
+
+    function loadHotkeyHints() {
+      window.electronAPI.invoke('settings:get').then((s) => {
+        if (!s) return;
+        const triggerHint = document.getElementById('trigger-hint');
+        const hideHint = document.getElementById('hide-hint');
+        if (triggerHint) triggerHint.innerHTML = renderHotkeyHint(s.hotkeys.trigger, '');
+        if (hideHint) hideHint.innerHTML = renderHotkeyHint(s.hotkeys.emergencyHide, 'hide');
+        const sym = hotkeyToSymbols(s.hotkeys.trigger);
+        chatMessages.setAttribute('data-empty-hint',
+          'Start a conversation, or press ' + sym + ' to analyze your screen.');
+      });
+    }
+    loadHotkeyHints();
+
+    window.electronAPI.on('settings:changed', (s) => {
+      if (!s || !s.hotkeys) return;
+      const triggerHint = document.getElementById('trigger-hint');
+      const hideHint = document.getElementById('hide-hint');
+      if (triggerHint) triggerHint.innerHTML = renderHotkeyHint(s.hotkeys.trigger, '');
+      if (hideHint) hideHint.innerHTML = renderHotkeyHint(s.hotkeys.emergencyHide, 'hide');
+      const sym = hotkeyToSymbols(s.hotkeys.trigger);
+      chatMessages.setAttribute('data-empty-hint',
+        'Start a conversation, or press ' + sym + ' to analyze your screen.');
+    });
+
+    // ── Timer (in floating bar) ──
+    const spTimerTime = document.getElementById('sp-timer-time');
+    const spTimerToggle = document.getElementById('sp-timer-toggle');
+    const spTimerPlaypause = document.getElementById('sp-timer-playpause');
+    const spTimerStop = document.getElementById('sp-timer-stop');
+    const spTimerDropdown = document.getElementById('sp-timer-dropdown');
+    let spTimerStatus = 'idle';
+    let spSelectedMinutes = 25;
+
+    const ftActiveGroup = document.getElementById('ft-active-group');
+    const floatTimer = document.getElementById('float-timer');
+
+    function updateSpTimer(state) {
+      spTimerStatus = state.status;
+      if (state.status === 'idle') {
+        floatTimer.classList.remove('timer-active');
+        ftActiveGroup.classList.remove('show');
+        spTimerDropdown.classList.remove('open');
+      } else {
+        floatTimer.classList.add('timer-active');
+        ftActiveGroup.classList.add('show');
+        spTimerDropdown.classList.remove('open');
+
+        const m = Math.floor(state.remainingSeconds / 60);
+        const s = state.remainingSeconds % 60;
+        spTimerTime.textContent = m + ':' + String(s).padStart(2, '0');
+
+        if (state.status === 'focus') {
+          spTimerTime.className = 'ft-time focus';
+          spTimerPlaypause.innerHTML = '<svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="3" x2="5" y2="13"/><line x1="11" y1="3" x2="11" y2="13"/></svg>';
+          spTimerPlaypause.title = 'Pause';
+        } else if (state.status === 'break') {
+          spTimerTime.className = 'ft-time break';
+          spTimerPlaypause.innerHTML = '<svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><polygon points="3,2 13,8 3,14"/></svg>';
+          spTimerPlaypause.title = 'Skip break';
+        } else if (state.status === 'paused') {
+          spTimerTime.className = 'ft-time paused';
+          spTimerPlaypause.innerHTML = '<svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><polygon points="3,2 13,8 3,14"/></svg>';
+          spTimerPlaypause.title = 'Resume';
+        }
+      }
+    }
+
+    spTimerToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      spTimerDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('float-timer').contains(e.target)) {
+        spTimerDropdown.classList.remove('open');
+      }
+    });
+
+    document.querySelectorAll('.ft-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        spSelectedMinutes = parseInt(btn.dataset.minutes, 10);
+        document.querySelectorAll('.ft-preset').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    document.getElementById('sp-timer-start').addEventListener('click', () => {
+      window.electronAPI.send('timer:start', spSelectedMinutes);
+      spTimerDropdown.classList.remove('open');
+    });
+
+    spTimerPlaypause.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (spTimerStatus === 'focus') window.electronAPI.send('timer:pause');
+      else if (spTimerStatus === 'paused') window.electronAPI.send('timer:resume');
+      else if (spTimerStatus === 'break') window.electronAPI.send('timer:skip-break');
+    });
+
+    spTimerStop.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.electronAPI.send('timer:end');
+    });
+
+    window.electronAPI.on('timer:tick', (state) => { updateSpTimer(state); });
+
+    window.electronAPI.invoke('timer:get-state').then((state) => {
+      if (state) updateSpTimer(state);
+    }).catch(() => {});
+
+    // ── Invisibility mode ──
+    let currentInvisible = false;
+
+    const invisToggleBtn = document.getElementById('sp-invis-toggle');
+
+    function updateInvisibleMode(settings) {
+      currentInvisible = !!settings.contentProtection;
+      if (currentInvisible) {
+        shell.classList.add('invisible-mode');
+        invisToggleBtn.classList.add('invis-active');
+        invisToggleBtn.title = 'Invisible mode ON';
+      } else {
+        shell.classList.remove('invisible-mode');
+        invisToggleBtn.classList.remove('invis-active');
+        invisToggleBtn.title = 'Invisible mode OFF';
+      }
+    }
+
+    window.electronAPI.invoke('settings:get').then(s => {
+      if (s) updateInvisibleMode(s);
+    });
+
+    invisToggleBtn.addEventListener('click', () => {
+      const newVal = !currentInvisible;
+      window.electronAPI.invoke('settings:update', { contentProtection: newVal });
+      updateInvisibleMode({ contentProtection: newVal });
+    });
+  </script>
+</body>
+</html>
