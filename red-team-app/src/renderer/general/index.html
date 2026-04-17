@@ -363,6 +363,10 @@
     }
     .auth-tier.free { background: var(--bg-active); color: var(--text-tertiary); }
     .auth-tier.pro { background: var(--primary-soft); color: var(--primary-text); }
+    .auth-tier.max {
+      background: linear-gradient(135deg, rgba(255,180,90,0.22), rgba(255,120,180,0.22));
+      color: rgba(255,220,200,0.98);
+    }
     @keyframes pulse-upgrade {
       0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
       50% { box-shadow: 0 0 8px 2px rgba(59,130,246,0.25); }
@@ -596,7 +600,45 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.12s ease;
-      gap: 12px;
+      gap: 10px;
+      min-height: 42px;
+      box-sizing: border-box;
+    }
+
+    /* Title group: title + inline mic badge (when meeting). Takes remaining
+       space so the meta columns on the right keep their fixed alignment
+       regardless of how long the title is. */
+    .session-row .sr-title-wrap {
+      flex: 1;
+      min-width: 0;               /* allow title to shrink/ellipsis */
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    /* Tiny mic pill shown only on meeting-bearing rows, sitting just
+       after the title. Width is content-sized; it never displaces the
+       right-hand meta columns because sr-title-wrap flexes. */
+    .session-row .sr-meeting-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: rgba(180,140,255,0.14);
+      color: rgba(215,190,255,0.95);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .session-row .sr-meeting-count {
+      flex-shrink: 0;
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+      padding: 1px 5px;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
     }
 
     .session-row:hover { background: var(--bg-hover); }
@@ -644,40 +686,131 @@
       background: linear-gradient(135deg, rgba(59,130,246,0.16) 0%, rgba(59,130,246,0.04) 100%);
     }
 
+    /* Reserves the same width as the Continue button for meeting-only rows
+       so the trailing delete (×) button lines up across all rows. */
+    .session-row .sr-continue-placeholder {
+      display: inline-block;
+      width: 72px;
+      flex-shrink: 0;
+    }
+
     .session-row .sr-title {
-      flex: 1;
       font-size: 13px;
       font-weight: 400;
       color: var(--text-secondary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      min-width: 0;
+      flex-shrink: 1;
     }
 
+    /* Meta columns are right-aligned and fixed-width so every row's time
+       column lines up, regardless of title length. */
     .session-row .sr-meta {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
       flex-shrink: 0;
       font-size: 12px;
       color: var(--text-tertiary);
       font-variant-numeric: tabular-nums;
-    }
-
-    .session-row .sr-msgs {
-      color: var(--text-tertiary);
-      min-width: 50px;
-      text-align: right;
+      justify-content: flex-end;
     }
 
     .session-row .sr-duration {
-      min-width: 44px;
+      width: 52px;
       text-align: right;
     }
 
     .session-row .sr-time {
-      min-width: 64px;
+      width: 72px;
       text-align: right;
+    }
+
+    /* ── Unified history indicators ── */
+    .session-row .sr-badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .sr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      font-size: 10.5px;
+      border-radius: 10px;
+      border: 1px solid var(--input-border);
+      background: rgba(255,255,255,0.02);
+      color: var(--text-tertiary);
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+    .sr-badge.meeting { border-color: rgba(180,140,255,0.35); color: rgba(210,180,255,0.95); }
+    .sr-badge.docs    { border-color: rgba(59,130,246,0.35);  color: rgba(150,190,255,0.95); }
+
+    /* Section blocks in the unified detail view */
+    .hist-section {
+      margin: 18px 0;
+      padding: 0;
+    }
+    .hist-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin: 0 0 10px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .hist-section-title .chev { display: inline-block; margin-right: 6px; transition: transform 0.15s; }
+    .hist-section-title.collapsed .chev { transform: rotate(-90deg); }
+    .hist-section-body.collapsed { display: none; }
+
+    .hist-meta-chip {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      border: 1px solid var(--input-border);
+      margin-right: 6px;
+    }
+
+    .hist-transcript-entry {
+      margin-bottom: 4px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--text-secondary);
+    }
+    .hist-transcript-entry .ht-speaker { font-weight: 600; margin-right: 6px; }
+    .hist-transcript-entry.you  .ht-speaker { color: var(--text-primary); }
+    .hist-transcript-entry.them .ht-speaker { color: rgba(180,140,255,0.95); }
+
+    .hist-summary-block {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+    .hist-summary-block h4 {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 12px 0 6px 0;
+    }
+    .hist-summary-block ul { margin: 4px 0 8px 18px; padding: 0; }
+    .hist-summary-block li { margin-bottom: 3px; }
+    .hist-empty-section {
+      color: var(--text-tertiary);
+      font-size: 12px;
+      font-style: italic;
     }
 
     /* ── Detail view ── */
@@ -1421,6 +1554,101 @@
     .support-link-arrow {
       color: var(--text-tertiary);
       flex-shrink: 0;
+    }
+
+    /* ── Open Source Licenses modal ── */
+    .licenses-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .licenses-modal.visible { display: flex; }
+    .licenses-card {
+      width: 100%;
+      max-width: 720px;
+      max-height: 80vh;
+      background: var(--bg-primary, #1b1b1e);
+      border: 1px solid var(--input-border);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+    }
+    .licenses-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .licenses-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .licenses-close {
+      width: 26px; height: 26px;
+      border: none;
+      background: transparent;
+      color: var(--text-quaternary);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .licenses-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+    .licenses-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .licenses-intro {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0 0 18px 0;
+      line-height: 1.55;
+    }
+    .license-entry {
+      margin-bottom: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .license-entry:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .license-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .license-sub {
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+    }
+    .license-text {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text-tertiary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 0;
+      overflow-x: auto;
     }
 
     /* Profile info row */
@@ -2444,13 +2672,19 @@
             <div class="s-section-label">CURRENT PLAN</div>
             <div class="billing-card" id="sub-free-row">
               <div class="billing-plan-name">Free</div>
-              <div class="billing-plan-desc">10 AI requests per day. GPT-4o Mini only.</div>
+              <div class="billing-plan-desc">20 messages per day. No Invisible Mode, attachments, or Meeting Copilot.</div>
               <button class="billing-action-btn upgrade" id="btn-upgrade">Upgrade to Pro</button>
             </div>
             <div class="billing-card" id="sub-pro-row" style="display:none;">
               <div class="billing-plan-name" style="color:var(--primary-text);">Pro</div>
-              <div class="billing-plan-desc">500 AI requests per day. All AI models. Invisible Mode enabled.</div>
-              <button class="billing-action-btn manage" id="btn-manage-sub">Manage Subscription</button>
+              <div class="billing-plan-desc">Unlimited messages. Invisible Mode included. Upgrade to Max for attachments and Meeting Copilot.</div>
+              <button class="billing-action-btn upgrade" id="btn-upgrade-max">Upgrade to Max</button>
+              <button class="billing-action-btn manage" id="btn-manage-sub" style="margin-top:8px;">Manage Subscription</button>
+            </div>
+            <div class="billing-card" id="sub-max-row" style="display:none;">
+              <div class="billing-plan-name" style="color:rgba(255,220,200,0.98);">Max</div>
+              <div class="billing-plan-desc">Everything in Pro, plus session document attachments and Meeting Copilot.</div>
+              <button class="billing-action-btn manage" id="btn-manage-sub-max">Manage Subscription</button>
             </div>
           </div>
         </div>
@@ -2512,7 +2746,124 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
             </div>
+
+            <div class="support-link" data-action="open-licenses">
+              <div class="support-link-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <div class="support-link-text">Open Source Licenses</div>
+              <div class="support-link-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Open Source Licenses modal ── -->
+  <div id="licenses-modal" class="licenses-modal">
+    <div class="licenses-card">
+      <div class="licenses-header">
+        <div class="licenses-title">Open Source Licenses</div>
+        <button class="licenses-close" id="licenses-close" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="licenses-body">
+        <p class="licenses-intro">
+          Hinty incorporates open source software. The copyright notices and license terms below apply to those components.
+        </p>
+
+        <div class="license-entry">
+          <div class="license-name">speexdsp</div>
+          <div class="license-sub">Acoustic echo cancellation and noise suppression — Xiph.Org Foundation</div>
+          <pre class="license-text">Copyright 2002-2008  Xiph.org Foundation
+Copyright 2002-2008  Jean-Marc Valin
+Copyright 2005-2007  Analog Devices Inc.
+Copyright 2005-2008  Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+Copyright 1993, 2002, 2006  David Rowe
+Copyright 2003        EpicGames
+Copyright 1992-1994  Jutta Degener, Carsten Bormann
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+- Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+- Neither the name of the Xiph.org Foundation nor the names of its contributors
+  may be used to endorse or promote products derived from this software without
+  specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
+        </div>
+
+        <div class="license-entry">
+          <div class="license-name">Electron</div>
+          <div class="license-sub">Cross-platform desktop app framework — OpenJS Foundation</div>
+          <pre class="license-text">Copyright (c) Electron contributors
+Copyright (c) 2013-2020 GitHub Inc.
+
+Licensed under the MIT License. Full text at:
+https://github.com/electron/electron/blob/main/LICENSE</pre>
+        </div>
+
+        <div class="license-entry">
+          <div class="license-name">Node.js</div>
+          <div class="license-sub">JavaScript runtime — OpenJS Foundation</div>
+          <pre class="license-text">Copyright Node.js contributors. All rights reserved.
+
+Licensed under the MIT License. Full text at:
+https://github.com/nodejs/node/blob/main/LICENSE</pre>
+        </div>
+
+        <div class="license-entry">
+          <div class="license-name">better-sqlite3</div>
+          <div class="license-sub">SQLite bindings — Joshua Wise</div>
+          <pre class="license-text">Copyright (c) 2016 Joshua Wise and contributors.
+
+Licensed under the MIT License. Full text at:
+https://github.com/WiseLibs/better-sqlite3/blob/master/LICENSE</pre>
+        </div>
+
+        <div class="license-entry">
+          <div class="license-name">node-addon-api</div>
+          <div class="license-sub">Native addon C++ bindings — Node.js Foundation</div>
+          <pre class="license-text">Copyright (c) 2017 Node.js API collaborators.
+
+Licensed under the MIT License. Full text at:
+https://github.com/nodejs/node-addon-api/blob/main/LICENSE.md</pre>
+        </div>
+
+        <div class="license-entry">
+          <div class="license-name">marked</div>
+          <div class="license-sub">Markdown parser</div>
+          <pre class="license-text">Copyright (c) 2018+, MarkedJS (https://github.com/markedjs/)
+Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)
+
+Licensed under the MIT License.</pre>
+        </div>
+
+        <div class="license-entry">
+          <div class="license-name">KaTeX</div>
+          <div class="license-sub">Math typesetting</div>
+          <pre class="license-text">Copyright (c) 2013-2020 Khan Academy and other contributors.
+
+Licensed under the MIT License. Full text at:
+https://github.com/KaTeX/KaTeX/blob/main/LICENSE</pre>
         </div>
       </div>
     </div>
@@ -2750,55 +3101,125 @@
       return groups;
     }
 
+    // Unified history: each row represents either (a) a chat session,
+    // possibly with a linked meeting, or (b) an orphan meeting (legacy rows
+    // recorded before the session<->meeting link existed).
     async function loadHistory() {
-      const sessions = await window.electronAPI.invoke('history:get-sessions');
+      const items = await window.electronAPI.invoke('history:list-unified');
       activityList.innerHTML = '';
 
-      if (!sessions || sessions.length === 0) {
+      if (!items || items.length === 0) {
         activityList.innerHTML = '<div class="activity-empty"><p>No sessions yet</p><div class="empty-hint">Click "Start Hinty" to begin your first session</div></div>';
         return;
       }
 
-      const groups = groupByDate(sessions);
-      Object.entries(groups).forEach(([dateLabel, items]) => {
+      // Shim to match groupByDate which expects { started_at }.
+      const shimmed = items.map(i => ({ ...i, started_at: i.startedAt, ended_at: i.endedAt }));
+      const groups = groupByDate(shimmed);
+
+      Object.entries(groups).forEach(([dateLabel, groupItems]) => {
         const group = document.createElement('div');
         group.className = 'date-group';
         group.innerHTML = '<div class="date-label">' + dateLabel + '</div>';
 
-        items.forEach((s) => {
+        groupItems.forEach((s) => {
           const row = document.createElement('div');
           row.className = 'session-row';
-          const title = s.title || ('Session \u2014 ' + formatTime(s.started_at));
-          row.innerHTML =
-            '<div class="sr-title">' + escapeHtml(title) + '</div>' +
-            '<div class="sr-meta">' +
-              '<span class="sr-duration">' + formatDuration(s.started_at, s.ended_at) + '</span>' +
-              '<span class="sr-msgs">' + (s.message_count || 0) + ' msgs</span>' +
-              '<span class="sr-time">' + formatTime(s.started_at) + '</span>' +
-            '</div>' +
-            '<button class="sr-continue" data-id="' + s.id + '">Continue</button>' +
-            '<button class="sr-delete" data-id="' + s.id + '" title="Delete session">' +
+
+          // Title fallback ladder: explicit title → meeting-derived title →
+          // meeting timestamp if it's meeting-only → generic session label.
+          let title = s.title;
+          if (!title) {
+            if (s.isMeetingOnly) title = 'Meeting — ' + formatTime(s.startedAt);
+            else title = 'Session — ' + formatTime(s.startedAt);
+          }
+
+          // Mic pill sits just after the title. Shown whenever the row
+          // has any meeting attached (orphan or session-linked). If the
+          // session has multiple meetings, show a small count badge next to it.
+          const meetingCount = s.meetingCount || (s.hasMeeting ? 1 : 0);
+          let meetingIconHtml = '';
+          if (meetingCount > 0) {
+            meetingIconHtml =
+              '<span class="sr-meeting-icon" title="' +
+                (meetingCount > 1 ? meetingCount + ' meetings in this session' : 'Includes a meeting') +
+              '">' +
+                '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' +
+                  '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/>' +
+                  '<line x1="12" y1="19" x2="12" y2="22"/>' +
+                '</svg>' +
+              '</span>';
+            if (meetingCount > 1) {
+              meetingIconHtml += '<span class="sr-meeting-count">' + meetingCount + '</span>';
+            }
+          }
+
+          // Docs chip next to mic (optional)
+          const badges = [];
+          if (s.hasDocuments) {
+            badges.push('<span class="sr-badge docs" title="Has documents">docs</span>');
+          }
+
+          // Duration: for meeting-only rows, use meeting duration; hybrid
+          // rows show the session's wall time (started → ended).
+          let durationText = '';
+          if (s.isMeetingOnly && s.meetingDuration) {
+            const m = Math.floor(s.meetingDuration / 60);
+            const sec = s.meetingDuration % 60;
+            durationText = (m > 0 ? m : '0') + ':' + String(sec).padStart(2, '0');
+          } else {
+            durationText = formatDuration(s.startedAt, s.endedAt);
+          }
+
+          // Delete button HTML — same for all rows.
+          const deleteBtnHtml =
+            '<button class="sr-delete" data-id="' + s.id + '" title="Delete">' +
               '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>' +
             '</button>';
 
-          // Click row to open session
+          // Continue button: visible on hover for every row except pure
+          // orphan meetings (which don't have a resumable chat).
+          const continueBtnHtml = s.isMeetingOnly
+            ? '<span class="sr-continue-placeholder"></span>'
+            : '<button class="sr-continue" data-id="' + s.id + '">Continue</button>';
+
+          row.innerHTML =
+            '<div class="sr-title-wrap">' +
+              '<div class="sr-title">' + escapeHtml(title) + '</div>' +
+              meetingIconHtml +
+              (badges.length ? '<div class="sr-badges">' + badges.join('') + '</div>' : '') +
+            '</div>' +
+            '<div class="sr-meta">' +
+              '<span class="sr-duration">' + durationText + '</span>' +
+              '<span class="sr-time">' + formatTime(s.startedAt) + '</span>' +
+            '</div>' +
+            continueBtnHtml +
+            deleteBtnHtml;
+
           row.addEventListener('click', (e) => {
             if (e.target.closest('.sr-delete') || e.target.closest('.sr-continue')) return;
-            openSession(s.id, s.started_at);
+            openUnifiedDetail(s.id, s.startedAt);
           });
-          row.querySelector('.sr-continue').addEventListener('click', (e) => {
-            e.stopPropagation();
-            window.electronAPI.send('session:continue', s.id);
-          });
+
+          const contBtn = row.querySelector('.sr-continue');
+          if (contBtn) {
+            contBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              window.electronAPI.send('session:continue', s.id);
+            });
+          }
+
           row.querySelector('.sr-delete').addEventListener('click', async (e) => {
             e.stopPropagation();
-            const ok = await window.electronAPI.invoke('history:delete-session', s.id);
+            if (!confirm('Delete this session? This cannot be undone.')) return;
+            const ok = await window.electronAPI.invoke('history:delete-unified', s.id);
             if (ok) {
               row.style.opacity = '0';
               row.style.transition = 'opacity 0.2s ease';
               setTimeout(() => { row.remove(); loadHistory(); }, 200);
             }
           });
+
           group.appendChild(row);
         });
 
@@ -2807,35 +3228,164 @@
     }
 
     let currentDetailSessionId = null;
+    let currentDetailKind = null; // 'session' | 'meeting-only'
 
-    async function openSession(id, startedAt) {
+    function renderHistorySection(titleText, bodyHtml) {
+      const section = document.createElement('div');
+      section.className = 'hist-section';
+      section.innerHTML =
+        '<div class="hist-section-title"><span class="chev">▾</span>' + escapeHtml(titleText) + '</div>' +
+        '<div class="hist-section-body">' + bodyHtml + '</div>';
+      const title = section.querySelector('.hist-section-title');
+      title.addEventListener('click', () => {
+        title.classList.toggle('collapsed');
+        section.querySelector('.hist-section-body').classList.toggle('collapsed');
+      });
+      return section;
+    }
+
+    function renderChatMessages(messages) {
+      const wrap = document.createElement('div');
+      if (!messages || messages.length === 0) {
+        wrap.innerHTML = '<div class="hist-empty-section">No chat messages in this session.</div>';
+        return wrap;
+      }
+      messages.forEach((m) => {
+        const el = document.createElement('div');
+        el.className = 'hist-msg ' + m.role;
+        let html = '<div class="hist-body">' + (m.role === 'assistant' ? renderMarkdown(m.content_text || '') : escapeHtml(m.content_text || '')) + '</div>';
+        if (m.screenshot) {
+          html += '<div class="hist-screenshot"><img src="data:image/jpeg;base64,' + m.screenshot + '" /></div>';
+        }
+        el.innerHTML = html;
+        wrap.appendChild(el);
+        if (m.role === 'assistant') {
+          enhanceCodeBlocks(el);
+        }
+      });
+      return wrap;
+    }
+
+    function renderMeetingSummaryBlock(summary) {
+      if (!summary || (!summary.overview && !(summary.keyDecisions||[]).length && !(summary.actionItems||[]).length && !(summary.followUps||[]).length)) {
+        return '<div class="hist-empty-section">No summary generated.</div>';
+      }
+      let html = '<div class="hist-summary-block">';
+      if (summary.overview) html += '<p>' + escapeHtml(summary.overview) + '</p>';
+      if ((summary.keyDecisions || []).length) {
+        html += '<h4>Key Decisions</h4><ul>' +
+          summary.keyDecisions.map(d => '<li>' + escapeHtml(d) + '</li>').join('') + '</ul>';
+      }
+      if ((summary.actionItems || []).length) {
+        html += '<h4>Action Items</h4><ul>' +
+          summary.actionItems.map(a => '<li>' + escapeHtml(a.task || '') +
+            (a.owner ? ' <em>— ' + escapeHtml(a.owner) + '</em>' : '') + '</li>').join('') + '</ul>';
+      }
+      if ((summary.followUps || []).length) {
+        html += '<h4>Follow-ups</h4><ul>' +
+          summary.followUps.map(f => '<li>' + escapeHtml(f) + '</li>').join('') + '</ul>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function renderMeetingTranscriptHtml(transcript) {
+      if (!transcript || transcript.length === 0) {
+        return '<div class="hist-empty-section">No transcript recorded.</div>';
+      }
+      return transcript.map(e => {
+        const label = e.channel === 1 ? 'You' : (e.speaker || 'Them');
+        const cls = e.channel === 1 ? 'you' : 'them';
+        return '<div class="hist-transcript-entry ' + cls + '">' +
+               '<span class="ht-speaker">' + escapeHtml(label) + ':</span>' +
+               '<span class="ht-text">' + escapeHtml(e.text || '') + '</span>' +
+               '</div>';
+      }).join('');
+    }
+
+    /**
+     * Unified session/meeting detail view.
+     *
+     * Sections render in this fixed order, each collapsible; empty ones
+     * still show an italic "none" line so the user isn't left wondering
+     * why something didn't appear:
+     *   1. Chat transcript (regular Q&A)
+     *   2. Meeting Summary
+     *   3. Meeting Transcript
+     *
+     * The Continue button is only visible for session-backed rows — orphan
+     * meetings (legacy meetings with no linked chat) cannot be resumed.
+     */
+    async function openUnifiedDetail(id, startedAt) {
       currentDetailSessionId = id;
       homeScroll.classList.add('hidden');
       historyDetail.classList.add('active');
       detailTitle.textContent = formatDate(startedAt) + ' at ' + formatTime(startedAt);
       detailMessages.innerHTML = '<div style="color:var(--text-tertiary);font-size:12px;">Loading...</div>';
 
-      const messages = await window.electronAPI.invoke('history:get-messages', id);
-      detailMessages.innerHTML = '';
-
-      if (!messages || messages.length === 0) {
-        detailMessages.innerHTML = '<div style="color:var(--text-tertiary);font-size:12px;">No messages in this session.</div>';
+      const detail = await window.electronAPI.invoke('history:get-unified-detail', id);
+      if (!detail) {
+        detailMessages.innerHTML = '<div style="color:var(--text-tertiary);font-size:12px;">Session not found.</div>';
         return;
       }
 
-      messages.forEach((m) => {
-        const el = document.createElement('div');
-        el.className = 'hist-msg ' + m.role;
+      currentDetailKind = detail.kind;
 
-        let html = '<div class="hist-body">' + (m.role === 'assistant' ? renderMarkdown(m.content_text || '') : escapeHtml(m.content_text || '')) + '</div>';
-        if (m.screenshot) {
-          html += '<div class="hist-screenshot"><img src="data:image/jpeg;base64,' + m.screenshot + '" /></div>';
+      if (detail.title) {
+        detailTitle.textContent = detail.title + ' · ' + formatDate(startedAt) + ' ' + formatTime(startedAt);
+      }
+
+      // Toggle Continue button visibility based on whether this is a
+      // real session or a legacy meeting-only row.
+      const continueBtn = document.getElementById('btn-continue-session');
+      if (continueBtn) continueBtn.style.display = detail.kind === 'session' ? '' : 'none';
+
+      detailMessages.innerHTML = '';
+
+      // Header chips — quick metadata summary so users see at a glance
+      // what's in this session (message count, meeting duration, doc count).
+      const header = document.createElement('div');
+      header.style.margin = '6px 0 8px 0';
+      const chips = [];
+      // "meetings" is the new multi-meeting list; "meeting" is the legacy
+      // single-meeting field we still set for back-compat.
+      const meetings = Array.isArray(detail.meetings) && detail.meetings.length > 0
+        ? detail.meetings
+        : (detail.meeting ? [detail.meeting] : []);
+
+      if ((detail.messages || []).length > 0) chips.push('<span class="hist-meta-chip">💬 ' + detail.messages.length + ' messages</span>');
+      if (meetings.length > 0) {
+        const totalSec = meetings.reduce((sum, m) => sum + (m.duration || 0), 0);
+        const mins = Math.max(1, Math.round(totalSec / 60));
+        const label = meetings.length > 1
+          ? meetings.length + ' meetings · ' + mins + ' min total'
+          : mins + ' min meeting';
+        chips.push('<span class="hist-meta-chip">🎙 ' + label + '</span>');
+        const totalDocs = meetings.reduce((sum, m) => sum + ((m.documents || []).length), 0);
+        if (totalDocs > 0) {
+          chips.push('<span class="hist-meta-chip">📎 ' + totalDocs + ' docs</span>');
         }
-        el.innerHTML = html;
-        detailMessages.appendChild(el);
-        if (m.role === 'assistant') {
-          enhanceCodeBlocks(el);
-        }
+      }
+      if (chips.length) header.innerHTML = chips.join('');
+      detailMessages.appendChild(header);
+
+      // 1) Chat section (hide entirely for meeting-only rows so we don't
+      //    surface an "empty chat" section that'd confuse users).
+      if (detail.kind === 'session') {
+        const chatSection = renderHistorySection('Chat', '');
+        chatSection.querySelector('.hist-section-body').innerHTML = '';
+        chatSection.querySelector('.hist-section-body').appendChild(renderChatMessages(detail.messages));
+        detailMessages.appendChild(chatSection);
+      }
+
+      // 2) Every meeting gets its own pair of sections. When there's only
+      //    one meeting the headings stay simple ("Meeting Summary"); when
+      //    there are multiple we suffix with an index so users can tell
+      //    them apart.
+      meetings.forEach((m, i) => {
+        const suffix = meetings.length > 1 ? ' — ' + (i + 1) : '';
+        detailMessages.appendChild(renderHistorySection('Meeting Summary' + suffix, renderMeetingSummaryBlock(m.summary)));
+        detailMessages.appendChild(renderHistorySection('Meeting Transcript' + suffix, renderMeetingTranscriptHtml(m.transcript)));
       });
     }
 
@@ -2843,14 +3393,17 @@
       historyDetail.classList.remove('active');
       homeScroll.classList.remove('hidden');
       currentDetailSessionId = null;
+      currentDetailKind = null;
     });
 
     document.getElementById('btn-continue-session').addEventListener('click', () => {
       if (!currentDetailSessionId) return;
+      if (currentDetailKind !== 'session') return; // meeting-only rows aren't continuable
       window.electronAPI.send('session:continue', currentDetailSessionId);
       historyDetail.classList.remove('active');
       homeScroll.classList.remove('hidden');
       currentDetailSessionId = null;
+      currentDetailKind = null;
     });
 
     function escapeHtml(text) {
@@ -2969,6 +3522,14 @@
       hkHide.innerHTML = renderHotkeyDisplay(s.hotkeys.emergencyHide);
 
       document.getElementById('content-protection').checked = s.contentProtection !== false;
+
+      // Keep the toggle in sync if another window (the sidepanel's float
+      // button) flips content-protection while this window is open.
+      window.electronAPI.on('settings:changed', (updated) => {
+        if (!updated) return;
+        const cp = document.getElementById('content-protection');
+        if (cp) cp.checked = updated.contentProtection !== false;
+      });
 
       // Notification preferences
       if (s.notifications) {
@@ -3261,28 +3822,27 @@
         document.getElementById('profile-avatar-btn').textContent = initial;
         document.getElementById('profile-tab-avatar').textContent = initial;
         document.getElementById('profile-tab-email').textContent = state.user.email;
-        document.getElementById('profile-tab-tier').textContent = state.user.tier === 'pro' ? 'Pro plan' : 'Free plan';
+        const tier = state.user.tier;
+        const tierLabel = tier === 'max' ? 'Max plan' : tier === 'pro' ? 'Pro plan' : 'Free plan';
+        document.getElementById('profile-tab-tier').textContent = tierLabel;
 
-        // Invisible Mode: Pro only
-        const isPro = state.user.tier === 'pro';
-        cpToggle.disabled = !isPro;
-        cpToggle.parentElement.style.opacity = isPro ? '1' : '0.4';
-        cpToggle.parentElement.style.pointerEvents = isPro ? 'auto' : 'none';
-        if (!isPro) {
+        // Invisible Mode: Pro + Max (anyone paying)
+        const hasInvisible = tier === 'pro' || tier === 'max';
+        cpToggle.disabled = !hasInvisible;
+        cpToggle.parentElement.style.opacity = hasInvisible ? '1' : '0.4';
+        cpToggle.parentElement.style.pointerEvents = hasInvisible ? 'auto' : 'none';
+        if (!hasInvisible) {
           cpToggle.checked = false;
           window.electronAPI.send('settings:toggle-content-protection', false);
         }
 
-        // Subscription / Billing UI
+        // Subscription / Billing UI — three-tier card switcher
         const subFreeRow = document.getElementById('sub-free-row');
         const subProRow = document.getElementById('sub-pro-row');
-        if (isPro) {
-          subFreeRow.style.display = 'none';
-          subProRow.style.display = 'block';
-        } else {
-          subFreeRow.style.display = 'block';
-          subProRow.style.display = 'none';
-        }
+        const subMaxRow = document.getElementById('sub-max-row');
+        subFreeRow.style.display = tier === 'free' ? 'block' : 'none';
+        subProRow.style.display  = tier === 'pro'  ? 'block' : 'none';
+        if (subMaxRow) subMaxRow.style.display = tier === 'max' ? 'block' : 'none';
       } else {
         // Show gate, hide app
         authScreen.classList.remove('hidden');
@@ -3336,6 +3896,18 @@
     document.getElementById('btn-manage-sub').addEventListener('click', () => {
       window.electronAPI.send('stripe:portal');
     });
+    const btnUpgradeMax = document.getElementById('btn-upgrade-max');
+    if (btnUpgradeMax) {
+      btnUpgradeMax.addEventListener('click', () => {
+        window.electronAPI.send('stripe:upgrade', 'max');
+      });
+    }
+    const btnManageMax = document.getElementById('btn-manage-sub-max');
+    if (btnManageMax) {
+      btnManageMax.addEventListener('click', () => {
+        window.electronAPI.send('stripe:portal');
+      });
+    }
 
     // ── Profile dropdown ──
     const profileAvatarBtn = document.getElementById('profile-avatar-btn');
@@ -3426,14 +3998,37 @@
       flash('Checking for updates...');
     });
 
-    // Support links: open in external browser
+    // Support links: open in external browser, or trigger in-app actions.
     document.querySelectorAll('.support-link').forEach(link => {
       link.addEventListener('click', () => {
+        const action = link.dataset.action;
+        if (action === 'open-licenses') {
+          const modal = document.getElementById('licenses-modal');
+          if (modal) modal.classList.add('visible');
+          return;
+        }
         const url = link.dataset.href;
         if (url && window.electronAPI && window.electronAPI.send) {
           window.electronAPI.send('open-external', url);
         }
       });
+    });
+
+    // Licenses modal — close on X click, background click, or Esc.
+    const licensesModalEl = document.getElementById('licenses-modal');
+    const licensesCloseEl = document.getElementById('licenses-close');
+    if (licensesCloseEl) {
+      licensesCloseEl.addEventListener('click', () => licensesModalEl.classList.remove('visible'));
+    }
+    if (licensesModalEl) {
+      licensesModalEl.addEventListener('click', (e) => {
+        if (e.target === licensesModalEl) licensesModalEl.classList.remove('visible');
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && licensesModalEl && licensesModalEl.classList.contains('visible')) {
+        licensesModalEl.classList.remove('visible');
+      }
     });
 
     // ── Topbar Timer UI ──

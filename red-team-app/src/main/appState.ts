@@ -6,7 +6,8 @@ import { registerHotkeys, unregisterHotkeys } from './hotkeys';
 import { resetSession, restoreSession, getCurrentSessionId, getExportableMessages, getLastActivityAt, RestoredMessage } from './session';
 import { getSettings, AI_MODEL } from './settingsStore';
 import { initDatabase } from './db/schema';
-import { createSession, endSession as dbEndSession, saveAllMessages, reopenSession, getSessionMessages } from './db/repository';
+import { endSession as dbEndSession, saveAllMessages, reopenSession, getSessionMessages, deleteSessionIfEmpty } from './db/repository';
+import { pruneIncompleteMeetings } from './db/meetingRepository';
 import { getStoredUser } from './auth/tokenStore';
 import { IPC_CHANNELS } from '../shared/types';
 
@@ -22,6 +23,7 @@ export function getAppMode(): AppMode {
 export function initDb(): void {
   try {
     initDatabase();
+    pruneIncompleteMeetings(30);
     console.log('[appState] SQLite initialized');
   } catch (err) {
     console.error('[appState] Failed to initialize SQLite:', err);
@@ -34,16 +36,10 @@ export async function startSession(): Promise<void> {
   appMode = 'session';
   console.log('[appState] Starting session');
 
-  const sessionId = resetSession();
-  const user = getStoredUser();
-
-  if (user?.id) {
-    try {
-      createSession(sessionId, AI_MODEL, String(user.id));
-    } catch (err) {
-      console.error('[appState] Failed to create session in DB:', err);
-    }
-  }
+  // NOTE: session row is now lazy-created on first message / first meeting
+  // (see ensureSessionExists in session.ts and meeting/index.ts). This keeps
+  // "opened panel then closed with nothing" sessions out of history.
+  resetSession();
 
   hideGeneralWindow();
   if (process.platform === 'darwin' && app.dock) {
@@ -66,6 +62,18 @@ export async function continueExistingSession(sessionId: string): Promise<void> 
   // End current session first if one is active
   if (appMode === 'session') {
     await endCurrentSession();
+  }
+
+  // If a meeting was left running/ended from before, reset it so the restored
+  // session doesn't carry stale meeting UI. This avoids the "pressed Continue
+  // and a meeting immediately appeared" footgun.
+  try {
+    const { getMeetingState, endMeeting } = await import('./meeting/index');
+    if (getMeetingState() !== 'idle') {
+      endMeeting();
+    }
+  } catch (err) {
+    console.warn('[appState] Failed to reset meeting before continue:', err);
   }
 
   appMode = 'session';
@@ -120,13 +128,36 @@ export async function endCurrentSession(): Promise<void> {
   stopInactivityTimer();
   unregisterHotkeys();
 
+  // If a meeting is still recording or in the ended-with-summary state,
+  // tear it down so the mic/system-audio capture stops. Otherwise the
+  // SCStream + AEC pipeline keeps running in the background — logs keep
+  // firing, CPU is wasted, and the mic stays tapped.
+  try {
+    const { getMeetingState, endMeeting } = await import('./meeting/index');
+    if (getMeetingState() !== 'idle') {
+      endMeeting();
+    }
+  } catch (err) {
+    console.warn('[appState] Failed to stop meeting on session end:', err);
+  }
+
   const sessionId = getCurrentSessionId();
   if (sessionId) {
     try {
       const messages = getExportableMessages();
-      saveAllMessages(sessionId, messages);
+      // Only save messages if there are any. Messages are a no-op for empty.
+      if (messages.length > 0) {
+        saveAllMessages(sessionId, messages);
+      }
       dbEndSession(sessionId, messages.length);
-      console.log(`[appState] Session ${sessionId} saved (${messages.length} messages)`);
+      // Prune the session row if it has no messages AND no meeting attached.
+      // ensureSessionExists may not have run (no first message, no meeting)
+      // in which case there's no row to prune — deleteSessionIfEmpty is a
+      // no-op then.
+      const pruned = deleteSessionIfEmpty(sessionId);
+      if (!pruned) {
+        console.log(`[appState] Session ${sessionId} saved (${messages.length} messages)`);
+      }
     } catch (err) {
       console.error('[appState] Failed to save session:', err);
     }

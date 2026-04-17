@@ -1,4 +1,4 @@
-import { shell } from 'electron';
+import { shell, app } from 'electron';
 import http from 'http';
 import { saveToken, getToken, getStoredUser, clearAuth, isAuthenticated } from './tokenStore';
 import { getGeneralWindow } from '../windows/general';
@@ -12,7 +12,13 @@ export { isAuthenticated, getToken, getStoredUser, clearAuth };
 // ── Auth state for deep link verification ──
 let pendingAuthState: string | null = null;
 
-// ── Local HTTP server (only for Stripe upgrade callback) ──
+// ── Local HTTP server (dev auth callback + Stripe upgrade callback) ──
+// In dev mode on macOS, LaunchServices registers the raw Electron binary as
+// the hinty:// handler rather than our app, so clicking "Open Hinty" in the
+// browser launches a new Electron with no app path (shows the default
+// starter window). The local HTTP callback sidesteps LaunchServices
+// entirely — the browser redirect hits this server directly, the app
+// stays focused, and the token is delivered in-process.
 let callbackServer: http.Server | null = null;
 let callbackPort: number | null = null;
 
@@ -22,6 +28,44 @@ function ensureCallbackServer(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = http.createServer(async (req, res) => {
       const url = new URL(req.url || '/', `http://127.0.0.1`);
+
+      if (url.pathname === '/auth/callback') {
+        const token = url.searchParams.get('token');
+        const state = url.searchParams.get('state');
+
+        // Render the same "You're signed in" chrome before we touch the
+        // callback so the browser has something to show if the handler
+        // takes a moment (token exchange, session sync).
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(`<!DOCTYPE html>
+<html>
+<head><title>Hinty</title></head>
+<body style="font-family: -apple-system, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0a0a0b; color: white; margin: 0;">
+  <div style="text-align: center;">
+    <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 8px;">You're signed in</h2>
+    <p style="color: #666; font-size: 14px;">You can close this tab — Hinty is ready.</p>
+  </div>
+</body>
+</html>`);
+
+        // Defer handleAuthCallback until AFTER we've written the response
+        // so the browser never sees a hanging request.
+        try {
+          await handleAuthCallback(token, state);
+        } catch (err) {
+          console.error('[auth] Local callback handler error:', err);
+        }
+
+        // Focus the app — dev mode doesn't get the LaunchServices focus we
+        // used to rely on from the hinty:// protocol handoff.
+        const general = getGeneralWindow();
+        if (general && !general.isDestroyed()) {
+          general.show();
+          general.focus();
+          if (process.platform === 'darwin') app.focus({ steal: true });
+        }
+        return;
+      }
 
       if (url.pathname === '/upgrade/callback') {
         res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -113,21 +157,49 @@ export async function handleDeepLink(url: string): Promise<void> {
   }
 }
 
+/**
+ * Build the auth-start URL.
+ *
+ * In dev mode (not packaged) we can't rely on macOS LaunchServices to route
+ * hinty:// back to the running app — so we spin up a loopback HTTP server
+ * and pass its URL as `callback_url`. The web redirects directly to the
+ * local server, skipping the deep-link entirely.
+ *
+ * In production (packaged app), Info.plist registers the protocol
+ * correctly, so we let the flow use the hinty:// path via /auth/success.
+ */
+async function buildLoginUrl(mode: 'sign-in' | 'sign-up'): Promise<string> {
+  pendingAuthState = crypto.randomBytes(16).toString('hex');
+  const params = new URLSearchParams();
+  params.set('state', pendingAuthState);
+  params.set('mode', mode);
+
+  if (!app.isPackaged) {
+    try {
+      const port = await ensureCallbackServer();
+      params.set('callback_url', `http://127.0.0.1:${port}/auth/callback`);
+      console.log(`[auth] Dev mode — using loopback callback on port ${port}`);
+    } catch (err) {
+      console.warn('[auth] Failed to start callback server, falling back to deep link:', err);
+    }
+  }
+
+  return `${API_BASE}/api/auth/desktop-login?${params.toString()}`;
+}
+
 // Open the sign-in page in the system browser
 // Uses /api/auth/desktop-login (server-side redirect) to:
 // 1. Clear Clerk session cookies (forces fresh sign-in / account picker)
 // 2. Redirect to /sign-in — no JavaScript needed, works on any browser
 export async function login(): Promise<void> {
-  pendingAuthState = crypto.randomBytes(16).toString('hex');
-  const url = `${API_BASE}/api/auth/desktop-login?state=${pendingAuthState}&mode=sign-in`;
+  const url = await buildLoginUrl('sign-in');
   shell.openExternal(url);
   console.log('[auth] Opened sign-in in browser');
 }
 
 // Open the sign-up page in the system browser
 export async function register(): Promise<void> {
-  pendingAuthState = crypto.randomBytes(16).toString('hex');
-  const url = `${API_BASE}/api/auth/desktop-login?state=${pendingAuthState}&mode=sign-up`;
+  const url = await buildLoginUrl('sign-up');
   shell.openExternal(url);
   console.log('[auth] Opened sign-up in browser');
 }
@@ -231,9 +303,22 @@ export function getAuthState() {
 }
 
 function notifyRenderer(): void {
+  const state = getAuthState();
   const general = getGeneralWindow();
   if (general && !general.isDestroyed()) {
-    general.webContents.send('auth:state-changed', getAuthState());
+    general.webContents.send('auth:state-changed', state);
+  }
+  // Also broadcast to the sidepanel so its cached tier + gate UI refresh.
+  // Without this, a tier change (Stripe webhook → profile refresh) would
+  // update the general window but leave the panel's currentTier stale.
+  try {
+    const { getSidePanelWindow } = require('../windows/sidepanel');
+    const panel = getSidePanelWindow();
+    if (panel && !panel.isDestroyed()) {
+      panel.webContents.send('auth:state-changed', state);
+    }
+  } catch {
+    // sidepanel may not exist yet — safe to ignore
   }
 }
 
@@ -246,7 +331,7 @@ export function stopCallbackServer(): void {
 }
 
 // Stripe: open checkout page in browser
-export async function openUpgradeCheckout(): Promise<void> {
+export async function openUpgradeCheckout(plan?: 'pro' | 'max'): Promise<void> {
   const token = getToken();
   if (!token) {
     console.error('[stripe] Not authenticated');
@@ -263,7 +348,7 @@ export async function openUpgradeCheckout(): Promise<void> {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ successUrl: callbackUrl }),
+      body: JSON.stringify({ successUrl: callbackUrl, plan: plan || 'pro' }),
     });
 
     if (!response.ok) {

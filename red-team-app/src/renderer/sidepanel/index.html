@@ -291,6 +291,16 @@
       background: var(--primary-soft);
     }
 
+    /* Meeting button active state */
+    .float-ctrl.meeting-active {
+      color: #ef4444;
+      background: rgba(239,68,68,0.12);
+    }
+    .float-ctrl.meeting-active:hover {
+      color: #ef4444;
+      background: rgba(239,68,68,0.18);
+    }
+
     /* ── Main shell ── */
     #shell {
       display: flex;
@@ -465,6 +475,125 @@
     #ss-modal.visible { display: flex; }
     #ss-modal img { max-width: 90%; max-height: 85%; border-radius: 10px; }
 
+    /* ── Upgrade modal (tier-gate + daily quota) ── */
+    .upgrade-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 220;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      pointer-events: auto;
+      animation: upgrade-fade 0.15s ease-out;
+    }
+    .upgrade-modal.visible { display: flex; }
+    @keyframes upgrade-fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .upgrade-card {
+      width: 100%;
+      max-width: 320px;
+      background: var(--bg-primary, #1b1b1e);
+      border: 1px solid var(--silver-border);
+      border-radius: 14px;
+      padding: 18px 18px 16px 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      animation: upgrade-pop 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    }
+    @keyframes upgrade-pop {
+      from { transform: scale(0.94); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .upgrade-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .upgrade-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+    .upgrade-close {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-quaternary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .upgrade-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+    .upgrade-body {
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+    .upgrade-body ul {
+      margin: 8px 0 0 0;
+      padding-left: 16px;
+    }
+    .upgrade-body li { margin-bottom: 3px; }
+    .upgrade-body .plan-name {
+      display: inline-block;
+      padding: 1px 7px;
+      margin: 0 2px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+    }
+    .upgrade-body .plan-name.pro {
+      background: rgba(180,140,255,0.22);
+      color: rgba(220,200,255,0.98);
+    }
+    .upgrade-body .plan-name.max {
+      background: linear-gradient(135deg, rgba(255,180,90,0.25), rgba(255,120,180,0.25));
+      color: rgba(255,220,200,0.98);
+    }
+    .upgrade-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .upgrade-secondary, .upgrade-primary {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .upgrade-secondary {
+      background: transparent;
+      color: var(--text-tertiary);
+      border: 1px solid var(--silver-border);
+    }
+    .upgrade-secondary:hover { color: var(--text-primary); border-color: var(--input-border); }
+    .upgrade-primary {
+      background: linear-gradient(135deg, rgba(180,140,255,0.22), rgba(255,120,180,0.20));
+      color: rgba(255,255,255,0.98);
+      border: 1px solid rgba(180,140,255,0.45);
+      box-shadow: 0 2px 8px rgba(180,140,255,0.15);
+    }
+    .upgrade-primary:hover {
+      background: linear-gradient(135deg, rgba(180,140,255,0.32), rgba(255,120,180,0.30));
+      border-color: rgba(180,140,255,0.65);
+    }
+
     /* ── Thinking dots ── */
     .thinking-dots {
       display: inline-flex;
@@ -629,6 +758,96 @@
       background: var(--bg-hover); color: var(--text-quaternary); line-height: 1;
     }
 
+    /* Attach (paperclip) button — same footprint as send for alignment */
+    #attach-btn {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--silver-border);
+      background: var(--input-bg);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    #attach-btn:hover { color: var(--text-primary); border-color: rgba(59,130,246,0.35); }
+    #attach-btn.locked {
+      color: var(--text-quaternary);
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    #attach-btn.locked:hover { color: var(--text-quaternary); border-color: var(--silver-border); }
+    #attach-btn.locked::after {
+      content: "MAX";
+      position: absolute;
+      bottom: -3px;
+      right: -5px;
+      font-size: 7.5px;
+      font-weight: 700;
+      background: linear-gradient(135deg, rgba(255,180,90,0.30), rgba(255,120,180,0.30));
+      color: rgba(255,220,200,0.98);
+      border-radius: 4px;
+      padding: 1px 3px;
+      pointer-events: none;
+      letter-spacing: 0.3px;
+    }
+    #attach-btn { position: relative; }
+
+    /* Floating control disabled (e.g. meeting button for non-Max) */
+    .float-ctrl.tier-locked {
+      opacity: 0.45;
+      cursor: not-allowed;
+      position: relative;
+    }
+    .float-ctrl.tier-locked::after {
+      content: "MAX";
+      position: absolute;
+      bottom: -4px;
+      right: -5px;
+      font-size: 7px;
+      font-weight: 700;
+      background: linear-gradient(135deg, rgba(255,180,90,0.30), rgba(255,120,180,0.30));
+      color: rgba(255,220,200,0.98);
+      border-radius: 3px;
+      padding: 1px 2.5px;
+      pointer-events: none;
+      letter-spacing: 0.2px;
+    }
+    .float-ctrl.tier-locked.pro-lock::after {
+      content: "PRO";
+      background: rgba(180,140,255,0.30);
+      color: rgba(220,200,255,0.98);
+    }
+
+    /* Session doc chip row (above chat bar when docs attached) */
+    #session-docs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 0 12px 8px 12px;
+    }
+    .sd-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      font-size: 11px;
+      border-radius: 10px;
+      background: rgba(59,130,246,0.10);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: var(--text-secondary);
+    }
+    .sd-chip .sd-x {
+      margin-left: 2px;
+      cursor: pointer;
+      color: var(--text-quaternary);
+      font-size: 13px;
+      line-height: 1;
+    }
+    .sd-chip .sd-x:hover { color: var(--danger); }
+
     /* Frosted send button */
     #send-btn {
       width: 34px; height: 34px;
@@ -652,6 +871,34 @@
     }
     #send-btn:active { transform: scale(0.93); }
 
+    /* Stop mode (square icon, red-ish) */
+    #send-btn.stop-mode {
+      background: linear-gradient(135deg, rgba(239,68,68,0.85) 0%, rgba(220,38,38,0.95) 100%);
+      border-color: rgba(239,68,68,0.35);
+      box-shadow: 0 0 16px rgba(239,68,68,0.20), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    #send-btn.stop-mode:hover {
+      background: linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,1) 100%);
+      box-shadow: 0 0 24px rgba(239,68,68,0.30), inset 0 1px 0 rgba(255,255,255,0.20);
+    }
+
+    /* Disabled controls state */
+    .controls-disabled .qbtn,
+    .controls-disabled #btn-assist,
+    .controls-disabled #template-selector-btn {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .controls-disabled #chat-input {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    /* Send button stays clickable (it's the stop button) */
+    .controls-disabled #send-btn {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
     /* ── Status footer (just hide hint) ── */
     #status-footer {
       display: flex;
@@ -669,6 +916,640 @@
 
     /* Hidden element for header-status references */
     #header-status { display: none; }
+
+    /* ══════════════════════════════════════════
+       Meeting Copilot Styles
+       ══════════════════════════════════════════ */
+
+    /* Meeting views — hidden by default */
+    #meeting-prep, #meeting-live, #meeting-summary, #meeting-history { display: none; }
+
+    /* When shell has meeting-mode class, hide ALL chat elements completely */
+    #shell.meeting-mode #chat-scroll {
+      display: none !important;
+      max-height: 0 !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      opacity: 0 !important;
+    }
+    #shell.meeting-mode #bottom-area {
+      display: none !important;
+      max-height: 0 !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    #shell.meeting-mode #header-status { display: none !important; }
+
+    /* Meeting views fill the shell */
+    #shell.meeting-mode {
+      overflow: hidden;
+      max-height: calc(100% - 44px);
+    }
+    #shell.meeting-mode #meeting-prep {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    #shell.meeting-mode #meeting-live {
+      flex: 1;
+      min-height: 0;
+    }
+    #shell.meeting-mode #meeting-summary {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    #shell.meeting-mode #meeting-history {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Recording indicator in float-pill */
+    #float-rec {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    #float-rec .rec-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #ef4444;
+      animation: recPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes recPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    #float-rec .rec-time {
+      font-variant-numeric: tabular-nums;
+      font-family: 'SF Mono', 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    #float-stop-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 22px;
+      padding: 0 8px 0 6px;
+      margin-left: 4px;
+      border-radius: 999px;
+      border: 0.5px solid rgba(239,68,68,0.35);
+      background: rgba(239,68,68,0.10);
+      color: rgba(239,120,120,0.95);
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-app-region: no-drag;
+    }
+    #float-stop-btn:hover {
+      background: rgba(239,68,68,0.18);
+      border-color: rgba(239,68,68,0.55);
+      color: rgba(255,140,140,1);
+    }
+    #float-stop-btn svg { flex-shrink: 0; }
+    .meeting-recording #float-rec { display: flex; }
+
+    /* ── Meeting Prep Screen ── */
+    #meeting-prep {
+      padding: 16px;
+      overflow-y: auto;
+      max-height: 100%;
+    }
+    .mp-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .mp-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .mp-history-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 26px;
+      padding: 0 10px 0 8px;
+      border-radius: 999px;
+      border: 0.5px solid var(--silver-border);
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mp-history-btn:hover {
+      border-color: var(--primary-border);
+      background: var(--primary-soft);
+      color: var(--primary-text);
+    }
+
+    /* ── Meeting History Screen ── */
+    #meeting-history { padding: 16px; }
+    .mh-header-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .mh-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 26px;
+      padding: 0 10px 0 6px;
+      border-radius: 999px;
+      border: 0.5px solid var(--silver-border);
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mh-back-btn:hover {
+      background: var(--bg-active);
+      color: var(--text-primary);
+    }
+    .mh-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .mh-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mh-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 0.5px solid var(--silver-border);
+      background: var(--bg-hover);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .mh-item:hover {
+      border-color: var(--primary-border);
+      background: var(--primary-soft);
+    }
+    .mh-item-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+      padding-right: 22px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mh-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+      margin-bottom: 6px;
+    }
+    .mh-item-meta .mh-dot {
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: var(--text-quaternary);
+    }
+    .mh-item-preview {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .mh-item-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-quaternary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      opacity: 0;
+    }
+    .mh-item:hover .mh-item-delete { opacity: 1; }
+    .mh-item-delete:hover {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+    .mh-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-tertiary);
+    }
+    .mh-empty-icon {
+      display: inline-flex;
+      color: var(--text-quaternary);
+      margin-bottom: 10px;
+    }
+    .mh-empty-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .mh-empty-sub {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* Transcript section inside the summary screen */
+    .ms-transcript-entry {
+      margin-bottom: 5px;
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: var(--text-secondary);
+    }
+    .ms-transcript-entry .ms-t-speaker { font-weight: 600; margin-right: 4px; }
+    .ms-transcript-entry.ms-t-you .ms-t-speaker { color: var(--primary-text); }
+    .ms-transcript-entry.ms-t-them .ms-t-speaker { color: rgba(180,140,255,0.95); }
+    .ms-transcript-entry .ms-t-text { color: var(--text-secondary); }
+    .mp-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .mp-context {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--silver-border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 12px;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 60px;
+      outline: none;
+      transition: border-color 0.2s;
+      box-shadow: 0 0 0 0.5px var(--silver-glow);
+      margin-bottom: 16px;
+    }
+    .mp-context:focus {
+      border-color: var(--primary-border);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+    .mp-context::placeholder { color: var(--text-quaternary); }
+
+    /* Document upload area */
+    .mp-docs {
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      min-height: 80px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .mp-docs.drag-over {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .mp-doc-list { display: flex; flex-direction: column; gap: 6px; }
+    .mp-doc-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--bg-hover);
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+    .mp-doc-item .doc-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+    }
+    .mp-doc-item .doc-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mp-doc-item .doc-status {
+      font-size: 10px;
+      color: var(--success);
+      flex-shrink: 0;
+    }
+    .mp-doc-item .doc-remove {
+      background: none; border: none;
+      color: var(--text-tertiary);
+      cursor: pointer; font-size: 14px;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+    .mp-doc-item .doc-remove:hover { color: var(--danger); }
+    .mp-drop-hint {
+      text-align: center;
+      padding: 16px 8px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+    }
+    .mp-drop-hint:hover { color: var(--text-secondary); }
+
+    /* Start meeting button */
+    .mp-start-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, rgba(239,68,68,0.85) 0%, rgba(220,38,38,0.95) 100%);
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .mp-start-btn:hover {
+      background: linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,1) 100%);
+    }
+    .mp-start-btn:active { transform: scale(0.98); }
+
+    /* ── Meeting Live View ── */
+    #meeting-live {
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Transcript section */
+    .ml-transcript {
+      flex: 0 0 40%;
+      overflow-y: auto;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      scroll-behavior: smooth;
+    }
+    .ml-transcript::-webkit-scrollbar { width: 3px; }
+    .ml-transcript::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+    .ml-t-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-quaternary);
+      margin-bottom: 8px;
+    }
+    .ml-t-entry {
+      margin-bottom: 6px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .ml-t-time {
+      font-family: 'SF Mono', 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-quaternary);
+      margin-right: 6px;
+    }
+    .ml-t-speaker {
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .ml-t-speaker.you { color: var(--primary-text); }
+    .ml-t-speaker.other { color: var(--text-secondary); }
+    .ml-t-text { color: var(--text-primary); }
+
+    /* AI suggestions section */
+    .ml-suggestions {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+    }
+    .ml-suggestions::-webkit-scrollbar { width: 3px; }
+    .ml-suggestions::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+    .ml-s-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-quaternary);
+      margin-bottom: 8px;
+    }
+
+    .ml-suggestion-card {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      animation: sugFadeIn 0.3s ease;
+    }
+    .ml-suggestion-card.warning {
+      background: rgba(245,158,11,0.08);
+      border-color: rgba(245,158,11,0.25);
+    }
+    @keyframes sugFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ml-suggestion-card .sug-type {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+      color: var(--primary-text);
+    }
+    .ml-suggestion-card.warning .sug-type {
+      color: rgba(245,158,11,0.85);
+    }
+
+    /* Action items section */
+    .ml-actions {
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .ml-actions::-webkit-scrollbar { width: 3px; }
+    .ml-actions::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+    .ml-a-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-quaternary);
+      margin-bottom: 6px;
+    }
+    .ml-action-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .ml-action-item .a-check {
+      width: 14px; height: 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border-strong);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: transparent;
+      transition: all 0.15s;
+    }
+    .ml-action-item .a-check.done {
+      background: var(--primary-soft);
+      border-color: var(--primary-border);
+      color: var(--primary-text);
+    }
+    .ml-action-item .a-owner {
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+
+    /* Meeting bottom bar (chat + template buttons during meeting) */
+    #meeting-bottom {
+      padding: 8px 14px 12px;
+      border-top: 1px solid var(--border);
+    }
+    #meeting-bottom .meeting-templates {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    #meeting-bottom .mt-btn {
+      padding: 4px 10px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    #meeting-bottom .mt-btn:hover {
+      border-color: var(--primary-border);
+      color: var(--primary-text);
+      background: var(--primary-soft);
+    }
+
+    /* ── Meeting Summary Screen ── */
+    #meeting-summary {
+      padding: 16px;
+      overflow-y: auto;
+      max-height: 100%;
+    }
+    .ms-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .ms-duration {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 14px;
+    }
+    .ms-section {
+      margin-bottom: 14px;
+    }
+    .ms-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-quaternary);
+      margin-bottom: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ms-section-title .ms-chevron {
+      transition: transform 0.2s;
+      font-size: 8px;
+    }
+    .ms-section-title.collapsed .ms-chevron { transform: rotate(-90deg); }
+    .ms-section-body {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--text-primary);
+    }
+    .ms-section-body ul {
+      padding-left: 16px;
+      margin: 0;
+    }
+    .ms-section-body li {
+      margin-bottom: 3px;
+    }
+    .ms-actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .ms-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ms-btn:hover {
+      border-color: var(--primary-border);
+      color: var(--primary-text);
+      background: var(--primary-soft);
+    }
+    .ms-btn.primary {
+      background: linear-gradient(135deg, rgba(59,130,246,0.85), rgba(37,99,235,0.95));
+      color: #fff;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -698,7 +1579,20 @@
         </div>
       </div>
 
+      <!-- Recording indicator (shown during meeting) -->
+      <div id="float-rec">
+        <span class="rec-dot"></span>
+        <span class="rec-time" id="rec-time">00:00</span>
+        <button id="float-stop-btn" title="Stop recording">
+          <svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10" rx="1.5"/></svg>
+          <span>Stop</span>
+        </button>
+      </div>
+
       <div class="float-pill" id="float-controls">
+        <button class="float-ctrl" id="sp-meeting-toggle" title="Meeting Copilot">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
         <button class="float-ctrl" id="sp-invis-toggle" title="Toggle invisible mode">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -725,6 +1619,96 @@
         <div id="chat-messages"></div>
       </div>
 
+      <!-- ═══ Meeting Prep Screen ═══ -->
+      <div id="meeting-prep">
+        <div class="mp-header-row">
+          <div class="mp-title">Meeting Prep</div>
+          <!-- History moved to the general window. -->
+        </div>
+
+        <div class="mp-label">Context / Goal</div>
+        <textarea class="mp-context" id="mp-context" placeholder="e.g. Sales call with Acme Corp. Goal: close the deal." rows="3"></textarea>
+
+        <div class="mp-label">Documents</div>
+        <div class="mp-docs" id="mp-docs">
+          <div class="mp-doc-list" id="mp-doc-list"></div>
+          <div class="mp-drop-hint" id="mp-drop-hint">+ Drop files or click to upload</div>
+        </div>
+
+        <button class="mp-start-btn" id="mp-start-btn">
+          <span class="rec-dot" style="width:8px;height:8px;border-radius:50%;background:#fff;"></span>
+          Start Meeting
+        </button>
+      </div>
+
+      <!-- ═══ Meeting Live View ═══ -->
+      <div id="meeting-live">
+        <div class="ml-transcript" id="ml-transcript">
+          <div class="ml-t-label">Transcript</div>
+          <div id="ml-transcript-entries"></div>
+        </div>
+
+        <div class="ml-suggestions" id="ml-suggestions">
+          <div class="ml-s-label">AI Suggestions</div>
+          <div id="ml-suggestion-cards"></div>
+        </div>
+
+        <div class="ml-actions" id="ml-actions" style="display:none;">
+          <div class="ml-a-label">Action Items</div>
+          <div id="ml-action-list"></div>
+        </div>
+
+        <div id="meeting-bottom">
+          <div class="meeting-templates">
+            <button class="mt-btn" data-action="summary">Summary</button>
+            <button class="mt-btn" data-action="actions">Action Items</button>
+            <button class="mt-btn" data-action="key-points">Key Points</button>
+          </div>
+          <div id="chat-bar-meeting">
+            <div id="chat-input-wrap-meeting" style="display:flex;gap:8px;">
+              <input type="text" id="meeting-chat-input" placeholder="Ask about the meeting..." autocomplete="off"
+                style="flex:1;padding:8px 14px;border-radius:50px;border:1px solid var(--silver-border);background:var(--input-bg);color:var(--text-primary);font-family:inherit;font-size:12px;outline:none;box-shadow:0 0 0 0.5px var(--silver-glow);" />
+              <button id="meeting-send-btn" style="width:34px;height:34px;border-radius:50%;border:0.5px solid rgba(59,130,246,0.35);background:linear-gradient(135deg,rgba(59,130,246,0.85),rgba(37,99,235,0.95));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="13" x2="8" y2="3"/><polyline points="4 7 8 3 12 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meeting history moved to the general window (unified history). -->
+
+      <!-- ═══ Meeting Summary Screen ═══ -->
+      <div id="meeting-summary">
+        <div class="ms-title" id="ms-title">Meeting Summary</div>
+        <div class="ms-duration" id="ms-duration"></div>
+
+        <div class="ms-section" id="ms-overview-section">
+          <div class="ms-section-title"><span class="ms-chevron">▾</span> Summary</div>
+          <div class="ms-section-body" id="ms-overview"></div>
+        </div>
+
+        <div class="ms-section" id="ms-decisions-section">
+          <div class="ms-section-title"><span class="ms-chevron">▾</span> Key Decisions</div>
+          <div class="ms-section-body" id="ms-decisions"></div>
+        </div>
+
+        <div class="ms-section" id="ms-actions-section">
+          <div class="ms-section-title"><span class="ms-chevron">▾</span> Action Items</div>
+          <div class="ms-section-body" id="ms-action-items"></div>
+        </div>
+
+        <div class="ms-section" id="ms-followups-section">
+          <div class="ms-section-title"><span class="ms-chevron">▾</span> Follow-ups</div>
+          <div class="ms-section-body" id="ms-followups"></div>
+        </div>
+
+        <div class="ms-actions-row">
+          <button class="ms-btn" id="ms-copy-btn">Copy</button>
+          <button class="ms-btn primary" id="ms-close-btn">Close</button>
+        </div>
+      </div>
+
       <div id="bottom-area">
         <div id="template-selector">
           <button id="template-selector-btn">
@@ -737,7 +1721,13 @@
           <div id="template-buttons"></div>
         </div>
 
+        <!-- Attached session documents (Max tier). Hidden when empty. -->
+        <div id="session-docs" style="display:none;"></div>
+
         <div id="chat-bar">
+          <button id="attach-btn" title="Attach documents (Max plan)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
           <div id="chat-input-wrap">
             <input type="text" id="chat-input" placeholder="Ask anything..." autocomplete="off" />
             <div class="input-hint" id="trigger-hint"></div>
@@ -756,6 +1746,23 @@
 
   <div id="ss-modal">
     <img id="ss-modal-img" src="" />
+  </div>
+
+  <!-- Upgrade modal — shown for tier-gated features and daily-quota hits -->
+  <div id="upgrade-modal" class="upgrade-modal">
+    <div class="upgrade-card">
+      <div class="upgrade-header">
+        <div class="upgrade-title" id="upgrade-title">Upgrade to unlock</div>
+        <button class="upgrade-close" id="upgrade-close" aria-label="Close">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="upgrade-body" id="upgrade-body"></div>
+      <div class="upgrade-actions">
+        <button class="upgrade-secondary" id="upgrade-later">Later</button>
+        <button class="upgrade-primary" id="upgrade-cta">Upgrade</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -786,7 +1793,7 @@
     // Electron setIgnoreMouseEvents(true, {forward:true}) makes the whole window
     // click-through but still receives mousemove. We re-enable clicks when the
     // cursor enters visible UI elements.
-    const interactiveRoots = document.querySelectorAll('#float-row .float-pill, #shell, .ft-dropdown, #template-dropdown, #ss-modal');
+    const interactiveRoots = document.querySelectorAll('#float-row .float-pill, #float-rec, #shell, .ft-dropdown, #template-dropdown, #ss-modal, #upgrade-modal');
     interactiveRoots.forEach(el => {
       el.addEventListener('mouseenter', () => {
         window.electronAPI.send('panel:set-clickthrough', false);
@@ -1024,6 +2031,32 @@
       currentAiText = '';
     });
 
+    // ── AI state management (disable controls + stop button) ──
+    const sendBtn = document.getElementById('send-btn');
+    const sendSvgArrow = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="13" x2="8" y2="3"/><polyline points="4 7 8 3 12 7"/></svg>';
+    const sendSvgStop = '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10" rx="2"/></svg>';
+    let aiState = 'idle'; // 'idle' | 'thinking' | 'streaming'
+
+    function setAiState(state) {
+      aiState = state;
+      const bottomArea = document.getElementById('bottom-area');
+
+      if (state === 'idle') {
+        sendBtn.classList.remove('stop-mode');
+        sendBtn.innerHTML = sendSvgArrow;
+        if (bottomArea) bottomArea.classList.remove('controls-disabled');
+      } else {
+        // thinking or streaming — show stop button, disable controls
+        sendBtn.classList.add('stop-mode');
+        sendBtn.innerHTML = sendSvgStop;
+        if (bottomArea) bottomArea.classList.add('controls-disabled');
+      }
+    }
+
+    window.electronAPI.on('ai:state', (state) => {
+      setAiState(state);
+    });
+
     // ── Session cleared ──
     window.electronAPI.on('session:cleared', () => {
       // Instantly collapse — no transition so old content isn't visible
@@ -1033,7 +2066,20 @@
       currentAiText = '';
       renderPending = false;
       lastScreenshotBase64 = null;
+      setAiState('idle');
       shell.classList.add('compact');
+      // Also reset meeting UI — if the panel was left in a meeting view
+      // (prep / recording / summary) from a previous session, clearing only
+      // chat would leave a stale meeting overlay on top of the new session.
+      try {
+        if (typeof setMeetingView === 'function') setMeetingView('idle');
+        const meetingBtn = document.getElementById('sp-meeting-toggle');
+        if (meetingBtn) meetingBtn.classList.remove('meeting-active');
+      } catch {}
+      // Drop any attached session-doc chips — they belong to the old session.
+      try {
+        if (typeof renderSessionDocs === 'function') renderSessionDocs([]);
+      } catch {}
       // Re-enable transitions after instant collapse
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -1087,7 +2133,7 @@
 
     // ── Send message ──
     function sendMessage(text) {
-      if (!text.trim()) return;
+      if (!text.trim() || aiState !== 'idle') return;
       expandPanel();
       addUserMessage(text, null);
       startAiMessage();
@@ -1095,12 +2141,18 @@
     }
 
     document.getElementById('send-btn').addEventListener('click', () => {
+      if (aiState !== 'idle') {
+        // Stop generating
+        window.electronAPI.send('ai:stop');
+        return;
+      }
       sendMessage(chatInput.value);
       chatInput.value = '';
     });
     chatInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
+        if (aiState !== 'idle') return;
         sendMessage(chatInput.value);
         chatInput.value = '';
       }
@@ -1139,6 +2191,7 @@
         el.dataset.buttonId = btn.id;
         el.textContent = btn.label;
         el.addEventListener('click', () => {
+          if (aiState !== 'idle') return;
           expandPanel();
           addUserMessage(btn.label, null);
           startAiMessage();
@@ -1358,9 +2411,644 @@
     });
 
     invisToggleBtn.addEventListener('click', () => {
+      // Pro + Max only
+      if (currentTier !== 'pro' && currentTier !== 'max') {
+        showUpgradeModal({ feature: 'invisible', currentTier: currentTier });
+        return;
+      }
       const newVal = !currentInvisible;
-      window.electronAPI.invoke('settings:update', { contentProtection: newVal });
+      // settings:toggle-content-protection also calls setContentProtection()
+      // on both windows at the OS level. settings:update alone only writes
+      // to the store — which is why the toggle button wasn't actually
+      // affecting visibility before.
+      window.electronAPI.send('settings:toggle-content-protection', newVal);
       updateInvisibleMode({ contentProtection: newVal });
+    });
+
+    // ── Upgrade modal (tier-gated features + daily-quota hits) ──
+    const upgradeModal = document.getElementById('upgrade-modal');
+    const upgradeTitleEl = document.getElementById('upgrade-title');
+    const upgradeBodyEl = document.getElementById('upgrade-body');
+    const upgradeCtaBtn = document.getElementById('upgrade-cta');
+    const upgradeLaterBtn = document.getElementById('upgrade-later');
+    const upgradeCloseBtn = document.getElementById('upgrade-close');
+
+    function planBadge(name) {
+      return '<span class="plan-name ' + name + '">' + name.toUpperCase() + '</span>';
+    }
+
+    function showUpgradeModal(opts) {
+      const feature = opts?.feature || 'generic';
+      const tier = opts?.currentTier || 'free';
+
+      let title = 'Upgrade to unlock';
+      let body = '';
+      let targetPlan = 'max'; // default
+
+      if (feature === 'meeting') {
+        title = 'Meeting Copilot is a Max feature';
+        body =
+          'Meeting Copilot — real-time transcription, live AI suggestions, and meeting summaries — is available on the ' +
+          planBadge('max') + ' plan.';
+        targetPlan = 'max';
+      } else if (feature === 'attach') {
+        title = 'Attach documents with Max';
+        body =
+          'Attaching files to your chat session is a ' + planBadge('max') + ' feature. ' +
+          'Upload PDFs, notes, and docs so Hinty can reason over them.';
+        targetPlan = 'max';
+      } else if (feature === 'invisible') {
+        title = 'Invisible Mode needs Pro';
+        body =
+          'Invisible Mode — hides Hinty from screen captures and recordings — is included with ' +
+          planBadge('pro') + ' and ' + planBadge('max') + '.';
+        targetPlan = 'pro';
+      } else if (feature === 'quota') {
+        title = 'Daily limit reached';
+        if (tier === 'free') {
+          body =
+            'You\'ve used all 20 messages for today on the Free plan. ' +
+            'Upgrade to ' + planBadge('pro') + ' for unlimited daily messages, or ' + planBadge('max') +
+            ' for everything including Meeting Copilot and document attachments.';
+          targetPlan = 'pro';
+        } else {
+          body =
+            'You\'ve hit today\'s request limit. It resets at midnight UTC. ' +
+            'Upgrade to ' + planBadge('max') + ' for the highest limits.';
+          targetPlan = 'max';
+        }
+      } else {
+        body = 'This feature requires a higher plan.';
+      }
+
+      upgradeTitleEl.textContent = title;
+      upgradeBodyEl.innerHTML = body;
+      upgradeCtaBtn.textContent = targetPlan === 'pro' ? 'Upgrade to Pro' : 'Upgrade to Max';
+      upgradeCtaBtn.dataset.plan = targetPlan;
+      upgradeModal.classList.add('visible');
+
+      // Quota-hit UX cleanup: if the user just sent a message that bounced
+      // off a daily limit, the panel has already expanded (user bubble +
+      // empty response area). Collapse it so the modal isn't floating over
+      // a half-filled chat pane. Also drop any thinking/streaming state and
+      // remove the last unanswered user bubble so the chat log doesn't show
+      // an orphan message.
+      if (feature === 'quota') {
+        try {
+          if (typeof setAiState === 'function') setAiState('idle');
+        } catch {}
+        try {
+          const lastUserMsg = chatMessages && chatMessages.querySelector('.msg.user:last-child');
+          if (lastUserMsg) lastUserMsg.remove();
+        } catch {}
+        shell.classList.add('compact');
+      }
+
+      // Make sure the panel isn't in click-through mode — the modal's
+      // mouseenter handler will already do this, but if the mouse wasn't
+      // over the modal area when it opened, buttons would appear dead.
+      try { window.electronAPI.send('panel:set-clickthrough', false); } catch {}
+    }
+
+    function hideUpgradeModal() {
+      upgradeModal.classList.remove('visible');
+      // The modal was added to interactiveRoots so its mouseleave toggles
+      // click-through back on — but if the modal hid before mouseleave
+      // fired (e.g. user pressed Later), we force transparency back on so
+      // the panel doesn't trap clicks over empty space.
+      try { window.electronAPI.send('panel:set-clickthrough', true); } catch {}
+    }
+
+    upgradeCloseBtn.addEventListener('click', hideUpgradeModal);
+    upgradeLaterBtn.addEventListener('click', hideUpgradeModal);
+    upgradeModal.addEventListener('click', (e) => {
+      if (e.target === upgradeModal) hideUpgradeModal();
+    });
+    upgradeCtaBtn.addEventListener('click', () => {
+      window.electronAPI.send('stripe:upgrade');
+      hideUpgradeModal();
+    });
+
+    // Server-signalled daily quota hit → friendly modal instead of red toast.
+    window.electronAPI.on('tier:quota-exceeded', (payload) => {
+      showUpgradeModal({ feature: 'quota', currentTier: payload?.currentTier });
+    });
+
+    // Main-process blocked a gated action (e.g. meeting:start-prep).
+    window.electronAPI.on('tier:gate-blocked', (payload) => {
+      showUpgradeModal({ feature: payload?.feature || 'generic', currentTier: payload?.currentTier });
+    });
+
+    // ── Tier state (shared by attach + meeting + invisibility gates) ──
+    const attachBtn = document.getElementById('attach-btn');
+    const sessionDocsEl = document.getElementById('session-docs');
+    let currentTier = null;
+
+    function applyTierGates() {
+      // Attach button — Max only
+      const isMax = currentTier === 'max';
+      if (isMax) {
+        attachBtn.classList.remove('locked');
+        attachBtn.title = 'Attach documents to this session';
+      } else {
+        attachBtn.classList.add('locked');
+        attachBtn.title = currentTier === 'pro'
+          ? 'Attachments are available on the Max plan'
+          : currentTier === 'free'
+          ? 'Attachments are available on the Max plan'
+          : 'Sign in to use attachments';
+      }
+
+      // Meeting button — Max only
+      const meetingBtn = document.getElementById('sp-meeting-toggle');
+      if (meetingBtn) {
+        if (isMax) {
+          meetingBtn.classList.remove('tier-locked');
+          meetingBtn.title = 'Meeting Copilot';
+        } else {
+          meetingBtn.classList.add('tier-locked');
+          meetingBtn.title = 'Meeting Copilot is available on the Max plan';
+        }
+      }
+
+      // Invisibility — Pro + Max. Free users: greyed out, forced off.
+      const invisBtn = document.getElementById('sp-invis-toggle');
+      if (invisBtn) {
+        const hasInvis = currentTier === 'pro' || currentTier === 'max';
+        if (hasInvis) {
+          invisBtn.classList.remove('tier-locked', 'pro-lock');
+          // title is managed by updateInvisibleMode
+        } else {
+          invisBtn.classList.add('tier-locked', 'pro-lock');
+          invisBtn.title = 'Invisible Mode is available on Pro and Max plans';
+          // Force off if user somehow had it on
+          if (currentInvisible) {
+            window.electronAPI.invoke('settings:update', { contentProtection: false });
+            updateInvisibleMode({ contentProtection: false });
+          }
+        }
+      }
+    }
+
+    async function refreshTier() {
+      try {
+        const auth = await window.electronAPI.invoke('auth:status');
+        currentTier = auth?.user?.tier || null;
+      } catch {
+        currentTier = null;
+      }
+      applyTierGates();
+    }
+    // Defer one tick so `currentInvisible` (declared earlier) and DOM are ready.
+    setTimeout(refreshTier, 0);
+
+    // Tier may change at runtime (login, profile refresh, subscription webhook).
+    window.electronAPI.on('auth:state-changed', () => { refreshTier(); });
+
+    function renderSessionDocs(docs) {
+      sessionDocsEl.innerHTML = '';
+      if (!docs || docs.length === 0) {
+        sessionDocsEl.style.display = 'none';
+        return;
+      }
+      sessionDocsEl.style.display = 'flex';
+      docs.forEach(d => {
+        const chip = document.createElement('div');
+        chip.className = 'sd-chip';
+        chip.innerHTML = '<span>📎</span><span>' + escapeHtml(d.fileName) + '</span>' +
+                         '<span class="sd-x" data-id="' + escapeHtml(d.id) + '">×</span>';
+        chip.querySelector('.sd-x').addEventListener('click', async () => {
+          window.electronAPI.send('session:remove-document', d.id);
+          await refreshSessionDocs();
+        });
+        sessionDocsEl.appendChild(chip);
+      });
+    }
+
+    async function refreshSessionDocs() {
+      try {
+        const docs = await window.electronAPI.invoke('session:list-documents');
+        renderSessionDocs(docs);
+      } catch {
+        renderSessionDocs([]);
+      }
+    }
+
+    attachBtn.addEventListener('click', async () => {
+      // Hard-disable for non-Max users — surface the upgrade modal instead
+      // of firing an IPC that will just fail.
+      if (currentTier !== 'max') {
+        showUpgradeModal({
+          feature: 'attach',
+          currentTier: currentTier,
+        });
+        return;
+      }
+      const result = await window.electronAPI.invoke('session:upload-document');
+      if (!result || !result.ok) {
+        if (result?.reason === 'upgrade-required') {
+          showUpgradeModal({ feature: 'attach', currentTier: result?.currentTier });
+        } else if (result?.reason === 'signin-required') {
+          showUpgradeModal({ feature: 'attach', currentTier: null });
+        } else if (result?.reason === 'no-session') {
+          // Silent: the session is auto-started on first message anyway.
+        }
+        return;
+      }
+      await refreshSessionDocs();
+    });
+
+    // ── Meeting toggle button ──
+    const meetingToggleBtn = document.getElementById('sp-meeting-toggle');
+
+    meetingToggleBtn.addEventListener('click', () => {
+      if (meetingState === 'idle') {
+        // Meeting Copilot is Max-tier only.
+        if (currentTier !== 'max') {
+          showUpgradeModal({ feature: 'meeting', currentTier: currentTier });
+          return;
+        }
+        // Enter meeting prep mode
+        window.electronAPI.send('meeting:start-prep');
+        setMeetingView('prep');
+        meetingToggleBtn.classList.add('meeting-active');
+      } else {
+        // If in prep, close meeting. If recording/ended, ignore (use stop/close buttons).
+        if (meetingState === 'prep') {
+          window.electronAPI.send('meeting:end');
+          setMeetingView('idle');
+          meetingToggleBtn.classList.remove('meeting-active');
+        }
+        // If recording, don't toggle — user must use stop button
+        // If ended (summary), don't toggle — user must use close button
+      }
+    });
+
+    // ══════════════════════════════════════════
+    //  Meeting Copilot UI
+    // ══════════════════════════════════════════
+
+    const meetingPrep = document.getElementById('meeting-prep');
+    const meetingLive = document.getElementById('meeting-live');
+    const meetingSummary = document.getElementById('meeting-summary');
+    const mpContext = document.getElementById('mp-context');
+    const mpDocs = document.getElementById('mp-docs');
+    const mpDocList = document.getElementById('mp-doc-list');
+    const mpDropHint = document.getElementById('mp-drop-hint');
+    const mpStartBtn = document.getElementById('mp-start-btn');
+    const mlTranscriptEntries = document.getElementById('ml-transcript-entries');
+    const mlSuggestionCards = document.getElementById('ml-suggestion-cards');
+    const mlActionList = document.getElementById('ml-action-list');
+    const mlActions = document.getElementById('ml-actions');
+    const recTimeEl = document.getElementById('rec-time');
+    const meetingChatInput = document.getElementById('meeting-chat-input');
+    const meetingSendBtn = document.getElementById('meeting-send-btn');
+
+    let meetingState = 'idle';
+    let meetingDocs = []; // { id, fileName, fileType, chars }
+    let recTimerInterval = null;
+    let recStartTime = 0;
+    let mlAutoScroll = true;
+
+    // ── Meeting mode switching ──
+
+    function setMeetingView(viewState) {
+      meetingState = viewState;
+      const s = shell;
+      const meetingBtn = document.getElementById('sp-meeting-toggle');
+
+      // Hide all meeting views first
+      meetingPrep.style.display = 'none';
+      meetingLive.style.display = 'none';
+      meetingSummary.style.display = 'none';
+
+      if (viewState === 'idle') {
+        s.classList.remove('meeting-mode', 'meeting-recording');
+        document.getElementById('outer-wrap').classList.remove('meeting-recording');
+        meetingBtn.classList.remove('meeting-active');
+        stopRecTimer();
+        return;
+      }
+
+      // Enter meeting mode — expand shell, hide chat
+      s.classList.add('meeting-mode');
+      s.classList.remove('compact');
+      meetingBtn.classList.add('meeting-active');
+
+      if (viewState === 'prep') {
+        meetingPrep.style.display = 'block';
+        s.classList.remove('meeting-recording');
+        document.getElementById('outer-wrap').classList.remove('meeting-recording');
+      } else if (viewState === 'recording') {
+        meetingLive.style.display = 'flex';
+        s.classList.add('meeting-recording');
+        document.getElementById('outer-wrap').classList.add('meeting-recording');
+        startRecTimer();
+      } else if (viewState === 'ended') {
+        meetingSummary.style.display = 'block';
+        s.classList.remove('meeting-recording');
+        document.getElementById('outer-wrap').classList.remove('meeting-recording');
+        stopRecTimer();
+      }
+    }
+
+    // ── Recording timer ──
+
+    function startRecTimer() {
+      recStartTime = Date.now();
+      stopRecTimer();
+      recTimerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+        const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        recTimeEl.textContent = m + ':' + s;
+      }, 1000);
+    }
+
+    function stopRecTimer() {
+      if (recTimerInterval) {
+        clearInterval(recTimerInterval);
+        recTimerInterval = null;
+      }
+    }
+
+    // ── Meeting Prep: Document upload ──
+
+    function renderDocList() {
+      mpDocList.innerHTML = '';
+      mpDropHint.style.display = meetingDocs.length === 0 ? 'block' : 'none';
+
+      meetingDocs.forEach(doc => {
+        const iconMap = { pdf: '📄', docx: '📝', xlsx: '📊', txt: '📋', md: '📋' };
+        const item = document.createElement('div');
+        item.className = 'mp-doc-item';
+        item.innerHTML =
+          '<span class="doc-icon">' + (iconMap[doc.fileType] || '📄') + '</span>' +
+          '<span class="doc-name">' + escapeHtml(doc.fileName) + '</span>' +
+          '<span class="doc-status">✓</span>' +
+          '<button class="doc-remove" data-id="' + doc.id + '">&times;</button>';
+        item.querySelector('.doc-remove').addEventListener('click', () => {
+          window.electronAPI.send('meeting:remove-doc', doc.id);
+          meetingDocs = meetingDocs.filter(d => d.id !== doc.id);
+          renderDocList();
+        });
+        mpDocList.appendChild(item);
+      });
+    }
+
+    mpDropHint.addEventListener('click', async () => {
+      const docs = await window.electronAPI.invoke('meeting:upload-doc');
+      if (docs && docs.length > 0) {
+        meetingDocs.push(...docs);
+        renderDocList();
+      }
+    });
+
+    // Drag & drop on the doc area
+    mpDocs.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      mpDocs.classList.add('drag-over');
+    });
+    mpDocs.addEventListener('dragleave', () => {
+      mpDocs.classList.remove('drag-over');
+    });
+    mpDocs.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      mpDocs.classList.remove('drag-over');
+      // Drag-drop file upload handled via IPC (native file picker for now)
+      const docs = await window.electronAPI.invoke('meeting:upload-doc');
+      if (docs && docs.length > 0) {
+        meetingDocs.push(...docs);
+        renderDocList();
+      }
+    });
+
+    // ── Meeting Prep: Start ──
+
+    mpStartBtn.addEventListener('click', () => {
+      const ctx = mpContext.value.trim();
+      if (ctx) {
+        window.electronAPI.send('meeting:set-context', ctx);
+      }
+      window.electronAPI.send('meeting:start-recording');
+    });
+
+    // ── Meeting Live: Transcript ──
+
+    function addTranscriptEntry(entry) {
+      const div = document.createElement('div');
+      div.className = 'ml-t-entry';
+
+      const mins = Math.floor(entry.timestamp / 60);
+      const secs = entry.timestamp % 60;
+      const time = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+
+      const speakerLabel = entry.speaker === 'you' ? 'You' : 'Them';
+      const speakerClass = entry.speaker === 'you' ? 'you' : 'other';
+
+      div.innerHTML =
+        '<span class="ml-t-time">' + time + '</span>' +
+        '<span class="ml-t-speaker ' + speakerClass + '">' + escapeHtml(speakerLabel) + ':</span> ' +
+        '<span class="ml-t-text">' + escapeHtml(entry.text) + '</span>';
+
+      mlTranscriptEntries.appendChild(div);
+
+      // Auto-scroll transcript
+      if (mlAutoScroll) {
+        const container = document.getElementById('ml-transcript');
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    // Pause auto-scroll when user scrolls up
+    document.getElementById('ml-transcript')?.addEventListener('scroll', function() {
+      const el = this;
+      mlAutoScroll = (el.scrollHeight - el.scrollTop - el.clientHeight) < 40;
+    });
+
+    // ── Meeting Live: Suggestions ──
+
+    function addSuggestion(suggestion) {
+      const card = document.createElement('div');
+      card.className = 'ml-suggestion-card' + (suggestion.type === 'warning' ? ' warning' : '');
+
+      const typeLabel = suggestion.type === 'warning' ? 'Warning' :
+        suggestion.type === 'action_item' ? 'Action Item' : 'Suggestion';
+
+      card.innerHTML =
+        '<div class="sug-type">' + typeLabel + '</div>' +
+        '<div>' + escapeHtml(suggestion.content) + '</div>';
+
+      // Keep only last 5 suggestions visible
+      while (mlSuggestionCards.children.length >= 5) {
+        mlSuggestionCards.removeChild(mlSuggestionCards.firstChild);
+      }
+
+      mlSuggestionCards.appendChild(card);
+      document.getElementById('ml-suggestions').scrollTop = document.getElementById('ml-suggestions').scrollHeight;
+    }
+
+    // ── Meeting Live: Action Items ──
+
+    function addActionItem(item) {
+      mlActions.style.display = 'block';
+
+      const div = document.createElement('div');
+      div.className = 'ml-action-item';
+      div.innerHTML =
+        '<button class="a-check" data-id="' + item.id + '">✓</button>' +
+        '<span>' + escapeHtml(item.task) +
+        (item.owner ? ' <span class="a-owner">— ' + escapeHtml(item.owner) + '</span>' : '') +
+        '</span>';
+
+      div.querySelector('.a-check').addEventListener('click', function() {
+        this.classList.toggle('done');
+      });
+
+      mlActionList.appendChild(div);
+    }
+
+    // ── Meeting Live: Chat (user messages) ──
+
+    meetingSendBtn.addEventListener('click', () => {
+      const text = meetingChatInput.value.trim();
+      if (!text || aiState !== 'idle') return;
+      meetingChatInput.value = '';
+      window.electronAPI.send('meeting:chat-send', { text, withScreenshot: false });
+    });
+
+    meetingChatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        meetingSendBtn.click();
+      }
+    });
+
+    // Meeting template buttons
+    document.querySelectorAll('.mt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (aiState !== 'idle') return;
+        const action = btn.dataset.action;
+        const prompts = {
+          'summary': 'Summarize the meeting so far — key points, what was discussed, and any decisions made.',
+          'actions': 'List all action items mentioned so far, with who is responsible for each one.',
+          'key-points': 'What are the most important points discussed so far?',
+        };
+        const text = prompts[action] || action;
+        window.electronAPI.send('meeting:chat-send', { text, withScreenshot: false });
+      });
+    });
+
+    // Stop recording (compact button in float-rec indicator)
+    document.getElementById('float-stop-btn').addEventListener('click', () => {
+      window.electronAPI.send('meeting:stop');
+    });
+
+    // ── Meeting Summary ──
+
+    function renderSummary(summary, duration) {
+      const mins = Math.floor(duration / 60);
+      document.getElementById('ms-duration').textContent = mins + ' minute' + (mins !== 1 ? 's' : '');
+
+      if (!summary) {
+        document.getElementById('ms-overview').textContent = 'No summary generated.';
+        document.getElementById('ms-decisions').innerHTML = '';
+        document.getElementById('ms-action-items').innerHTML = '';
+        document.getElementById('ms-followups').innerHTML = '';
+        return;
+      }
+
+      document.getElementById('ms-overview').textContent = summary.overview || '';
+
+      const decisionsEl = document.getElementById('ms-decisions');
+      decisionsEl.innerHTML = (summary.keyDecisions || []).length > 0
+        ? '<ul>' + summary.keyDecisions.map(d => '<li>' + escapeHtml(d) + '</li>').join('') + '</ul>'
+        : '<p style="color:var(--text-tertiary)">None</p>';
+
+      const actionsEl = document.getElementById('ms-action-items');
+      actionsEl.innerHTML = (summary.actionItems || []).length > 0
+        ? '<ul>' + summary.actionItems.map(a =>
+            '<li>' + escapeHtml(a.task) + (a.owner ? ' — <em>' + escapeHtml(a.owner) + '</em>' : '') + '</li>'
+          ).join('') + '</ul>'
+        : '<p style="color:var(--text-tertiary)">None</p>';
+
+      const followupsEl = document.getElementById('ms-followups');
+      followupsEl.innerHTML = (summary.followUps || []).length > 0
+        ? '<ul>' + summary.followUps.map(f => '<li>' + escapeHtml(f) + '</li>').join('') + '</ul>'
+        : '<p style="color:var(--text-tertiary)">None</p>';
+    }
+
+    // Section collapse toggle
+    document.querySelectorAll('.ms-section-title').forEach(title => {
+      title.addEventListener('click', () => {
+        title.classList.toggle('collapsed');
+        const body = title.nextElementSibling;
+        body.style.display = title.classList.contains('collapsed') ? 'none' : 'block';
+      });
+    });
+
+    // Copy summary
+    document.getElementById('ms-copy-btn').addEventListener('click', () => {
+      const text = document.getElementById('meeting-summary').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('ms-copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+      });
+    });
+
+    // Close summary → end meeting
+    document.getElementById('ms-close-btn').addEventListener('click', () => {
+      window.electronAPI.send('meeting:end');
+      setMeetingView('idle');
+      // Clear meeting state
+      meetingDocs = [];
+      mpContext.value = '';
+      renderDocList();
+      mlTranscriptEntries.innerHTML = '';
+      mlSuggestionCards.innerHTML = '';
+      mlActionList.innerHTML = '';
+      mlActions.style.display = 'none';
+      document.getElementById('sp-meeting-toggle').classList.remove('meeting-active');
+    });
+
+    // Meeting history has been consolidated into the general window's
+    // unified history. No side-panel history UI here anymore.
+
+    // ── Meeting IPC listeners ──
+
+    window.electronAPI.on('meeting:state', (newState) => {
+      setMeetingView(newState);
+    });
+
+    window.electronAPI.on('meeting:transcript-update', (entry) => {
+      addTranscriptEntry(entry);
+    });
+
+    window.electronAPI.on('meeting:suggestion', (suggestion) => {
+      addSuggestion(suggestion);
+    });
+
+    window.electronAPI.on('meeting:action-item', (item) => {
+      addActionItem(item);
+    });
+
+    let summaryDuration = 0;
+    window.electronAPI.on('meeting:summary', (summary) => {
+      const elapsed = recStartTime ? Math.floor((Date.now() - recStartTime) / 1000) : 0;
+      renderSummary(summary, elapsed);
+    });
+
+    window.electronAPI.on('meeting:error', (err) => {
+      console.error('[meeting-ui] Error:', err);
+      // Show error as a suggestion card with warning style
+      addSuggestion({ type: 'warning', content: 'Error: ' + err, id: 'err_' + Date.now() });
+    });
+
+    // ── Enter meeting prep (called externally, e.g. from general window) ──
+    window.electronAPI.on('meeting:enter-prep', () => {
+      window.electronAPI.send('meeting:start-prep');
+      setMeetingView('prep');
     });
   </script>
 </body>

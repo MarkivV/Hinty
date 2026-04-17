@@ -78,7 +78,7 @@ export interface AuthTokens {
 export interface UserProfile {
   id: number;
   email: string;
-  tier: 'free' | 'pro';
+  tier: 'free' | 'pro' | 'max';
 }
 
 export interface AuthState {
@@ -133,9 +133,65 @@ export interface AppSettings {
   };
 }
 
+// ── Meeting ──
+
+export interface MeetingDocument {
+  id: string;
+  fileName: string;
+  fileType: 'pdf' | 'docx' | 'xlsx' | 'txt' | 'md';
+  extractedText: string;
+  uploadedAt: number;
+}
+
+export interface TranscriptEntry {
+  id: string;
+  meetingId: string;
+  timestamp: number;       // seconds from meeting start
+  speaker: string;         // 'you' | 'speaker_1' | 'speaker_2' ...
+  text: string;
+  channel: 0 | 1;          // 0 = system audio (others), 1 = mic (you)
+}
+
+export interface MeetingActionItem {
+  id: string;
+  task: string;
+  owner: string;           // 'you' | 'them' | speaker label
+  done: boolean;
+}
+
+export interface MeetingSuggestion {
+  id: string;
+  meetingId: string;
+  timestamp: number;
+  type: 'suggestion' | 'action_item' | 'warning';
+  content: string;
+}
+
+export interface MeetingSummary {
+  overview: string;
+  keyDecisions: string[];
+  actionItems: MeetingActionItem[];
+  followUps: string[];
+}
+
+export interface MeetingSession {
+  id: string;
+  userId: string;
+  title: string;
+  context: string;
+  startedAt: number;
+  endedAt: number | null;
+  duration: number;
+  status: 'prep' | 'recording' | 'ended';
+  documents: MeetingDocument[];
+  transcript: TranscriptEntry[];
+  suggestions: MeetingSuggestion[];
+  summary: MeetingSummary | null;
+}
+
 // ── App State ──
 
-export type AppMode = 'idle' | 'session';
+export type AppMode = 'idle' | 'session' | 'meeting';
 
 // ── IPC Channels ──
 
@@ -184,4 +240,30 @@ export const IPC_CHANNELS = {
 
   // Notifications
   NOTIFY_PAGE_CHANGED: 'notify:page-changed',
+
+  // AI control
+  AI_STOP: 'ai:stop',
+  AI_STATE: 'ai:state',  // 'idle' | 'thinking' | 'streaming'
+
+  // Meeting Copilot
+  MEETING_START_PREP: 'meeting:start-prep',
+  MEETING_START_RECORDING: 'meeting:start-recording',
+  MEETING_STOP: 'meeting:stop',
+  MEETING_UPLOAD_DOC: 'meeting:upload-doc',
+  MEETING_REMOVE_DOC: 'meeting:remove-doc',
+  MEETING_SET_CONTEXT: 'meeting:set-context',
+  MEETING_TRANSCRIPT_UPDATE: 'meeting:transcript-update',
+  MEETING_SUGGESTION: 'meeting:suggestion',
+  MEETING_ACTION_ITEM: 'meeting:action-item',
+  MEETING_STATE: 'meeting:state',
+  MEETING_SUMMARY: 'meeting:summary',
+  MEETING_ERROR: 'meeting:error',
+
+  // Meeting history
+  MEETING_HISTORY_LIST_REQ: 'meeting:history-list-req',
+  MEETING_HISTORY_LIST_RES: 'meeting:history-list-res',
+  MEETING_HISTORY_DETAIL_REQ: 'meeting:history-detail-req',
+  MEETING_HISTORY_DETAIL_RES: 'meeting:history-detail-res',
+  MEETING_HISTORY_DELETE: 'meeting:history-delete',
+  MEETING_HISTORY_RENAME: 'meeting:history-rename',
 } as const;

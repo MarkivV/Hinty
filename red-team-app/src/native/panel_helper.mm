@@ -16,6 +16,62 @@
 // ── Global flag: when YES, the window can become key (for text input) ──
 static BOOL gAllowBecomeKey = NO;
 
+// Associated-object key used to stash the pre-swizzle class so we can restore
+// it before the NSWindow is deallocated (otherwise AppKit dispatches -dealloc
+// through our dynamic subclass, and any teardown path that touches super can
+// crash — this is the common source of SIGSEGV-on-quit).
+static const char kHintyOriginalClassKey = 0;
+static const char kHintyViewOriginalClassKey = 0;
+
+/**
+ * Handler for NSWindowWillCloseNotification — restores the original class
+ * on both the window and its content view before AppKit tears them down.
+ */
+@interface HintyPanelCleanupObserver : NSObject
++ (instancetype)sharedObserver;
+- (void)windowWillClose:(NSNotification*)note;
+@end
+
+@implementation HintyPanelCleanupObserver
++ (instancetype)sharedObserver {
+    static HintyPanelCleanupObserver* inst = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ inst = [[HintyPanelCleanupObserver alloc] init]; });
+    return inst;
+}
+- (void)windowWillClose:(NSNotification*)note {
+    NSWindow* window = (NSWindow*)[note object];
+    if (!window) return;
+
+    // Restore content view's original class
+    NSView* contentView = [window contentView];
+    if (contentView) {
+        id origViewClassObj = objc_getAssociatedObject(contentView, &kHintyViewOriginalClassKey);
+        if (origViewClassObj) {
+            Class origViewClass = (__bridge Class)(void*)[origViewClassObj pointerValue];
+            if (origViewClass) {
+                object_setClass(contentView, origViewClass);
+            }
+            objc_setAssociatedObject(contentView, &kHintyViewOriginalClassKey, nil, OBJC_ASSOCIATION_RETAIN);
+        }
+    }
+
+    // Restore window's original class
+    id origClassObj = objc_getAssociatedObject(window, &kHintyOriginalClassKey);
+    if (origClassObj) {
+        Class origClass = (__bridge Class)(void*)[origClassObj pointerValue];
+        if (origClass) {
+            object_setClass(window, origClass);
+        }
+        objc_setAssociatedObject(window, &kHintyOriginalClassKey, nil, OBJC_ASSOCIATION_RETAIN);
+    }
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:NSWindowWillCloseNotification
+                                                  object:window];
+}
+@end
+
 // ── Method implementations for our dynamic subclass ──
 
 // The critical override: macOS checks this internally in [NSApp sendEvent:]
@@ -94,9 +150,9 @@ Napi::Value MakePanel(const Napi::CallbackInfo& info) {
     const char* subclassName = "HintyFloatingPanel";
     Class subclass = objc_getClass(subclassName);
 
+    Class originalWindowClass = object_getClass(window);
     if (!subclass) {
-        Class originalClass = object_getClass(window);
-        subclass = objc_allocateClassPair(originalClass, subclassName, 0);
+        subclass = objc_allocateClassPair(originalWindowClass, subclassName, 0);
         if (!subclass) return Napi::Boolean::New(env, false);
 
         // _isNonactivatingPanel — prevents app activation on click
@@ -122,14 +178,19 @@ Napi::Value MakePanel(const Napi::CallbackInfo& info) {
         objc_registerClassPair(subclass);
     }
 
+    // Stash original window class so we can restore before dealloc.
+    objc_setAssociatedObject(window, &kHintyOriginalClassKey,
+        [NSValue valueWithPointer:(__bridge void*)originalWindowClass],
+        OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     object_setClass(window, subclass);
 
     // 3. Override acceptsFirstMouse on the content view
     const char* viewSubclassName = "HintyPanelContentView";
     Class viewSubclass = objc_getClass(viewSubclassName);
+    Class viewOriginalClass = object_getClass(contentView);
 
     if (!viewSubclass) {
-        Class viewOriginalClass = object_getClass(contentView);
         viewSubclass = objc_allocateClassPair(viewOriginalClass, viewSubclassName, 0);
         if (viewSubclass) {
             class_addMethod(viewSubclass, @selector(acceptsFirstMouse:),
@@ -139,11 +200,23 @@ Napi::Value MakePanel(const Napi::CallbackInfo& info) {
     }
 
     if (viewSubclass) {
+        objc_setAssociatedObject(contentView, &kHintyViewOriginalClassKey,
+            [NSValue valueWithPointer:(__bridge void*)viewOriginalClass],
+            OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         object_setClass(contentView, viewSubclass);
     }
 
     // 4. Floating window level
     [window setLevel:NSFloatingWindowLevel];
+
+    // 5. Register willClose observer so we can un-swizzle before dealloc.
+    //    Without this, the NSWindow gets deallocated while still pointing at
+    //    our dynamic subclass, and AppKit's teardown path can SIGSEGV.
+    [[NSNotificationCenter defaultCenter]
+        addObserver:[HintyPanelCleanupObserver sharedObserver]
+           selector:@selector(windowWillClose:)
+               name:NSWindowWillCloseNotification
+             object:window];
 
     return Napi::Boolean::New(env, true);
 }
@@ -164,19 +237,24 @@ Napi::Value SetAllowKeyWindow(const Napi::CallbackInfo& info) {
 
     if (info.Length() >= 2 && info[1].IsBuffer()) {
         Napi::Buffer<uint8_t> buf = info[1].As<Napi::Buffer<uint8_t>>();
-        NSView* view = *reinterpret_cast<NSView**>(buf.Data());
-        if (view) {
-            NSWindow* window = [view window];
-            if (window) {
-                if (gAllowBecomeKey) {
-                    // Make key so the text field receives keyboard input
-                    [window makeKeyWindow];
-                } else {
-                    // Resign key cleanly — no orderOut, no hide, just resign.
-                    // The window stays visible and on top.
-                    [window resignKeyWindow];
+        // Wrap in @try/@catch — the NSView pointer stored in the Buffer can
+        // become dangling if the window was destroyed between the JS-side
+        // isDestroyed() check and this native call (teardown race).
+        @try {
+            NSView* view = *reinterpret_cast<NSView**>(buf.Data());
+            if (view) {
+                NSWindow* window = [view window];
+                // Verify the window is still alive and managed by NSApp
+                if (window && [[NSApp windows] containsObject:window]) {
+                    if (gAllowBecomeKey) {
+                        [window makeKeyWindow];
+                    } else {
+                        [window resignKeyWindow];
+                    }
                 }
             }
+        } @catch (NSException* e) {
+            NSLog(@"[panel_helper] setAllowKeyWindow ignored stale handle: %@", e);
         }
     }
 

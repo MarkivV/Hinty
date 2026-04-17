@@ -4,8 +4,8 @@ import { captureScreenshot } from './capture/screenshot';
 import { getSettings, AI_MODEL } from './settingsStore';
 import { getSidePanelWindow } from './windows/sidepanel';
 import { IPC_CHANNELS } from '../shared/types';
-import { updateSessionTitle } from './db/repository';
-import { getToken } from './auth/tokenStore';
+import { updateSessionTitle, ensureSessionExists } from './db/repository';
+import { getToken, getStoredUser } from './auth/tokenStore';
 
 const API_BASE = 'https://hinty-web.vercel.app';
 
@@ -26,6 +26,8 @@ let isProcessing = false;
 let currentSessionId: string | null = null;
 let lastActivityAt: number = 0;
 let titleGenerated = false;
+let currentAbortController: AbortController | null = null;
+let partialResponse = '';
 
 // Limit how many past screenshots are sent to the API to prevent payload bloat.
 // Only the most recent N exchanges include their screenshots; older ones are text-only.
@@ -132,11 +134,20 @@ export function getExportableMessages(): SessionMessage[] {
   return result;
 }
 
+export function stopGenerating(): void {
+  if (currentAbortController) {
+    console.log('[session] Stop generating requested');
+    currentAbortController.abort();
+    currentAbortController = null;
+  }
+}
+
 // Stream response via backend proxy
 async function streamViaProxy(
   messages: OpenAI.ChatCompletionMessageParam[],
   model: string,
   onToken: (token: string) => void,
+  signal?: AbortSignal,
 ): Promise<string> {
   const token = getToken();
   if (!token) throw new Error('Not authenticated — please sign in');
@@ -156,6 +167,7 @@ async function streamViaProxy(
       'Authorization': `Bearer ${token}`,
     },
     body: payload,
+    signal,
   });
 
   console.log(`[session] Response status: ${response.status}`);
@@ -173,6 +185,11 @@ async function streamViaProxy(
   let buffer = '';
 
   while (true) {
+    if (signal?.aborted) {
+      await reader.cancel();
+      break;
+    }
+
     const { done, value } = await reader.read();
     if (done) break;
 
@@ -225,11 +242,32 @@ export async function sendMessage(userText: string, hotkeyTrigger = false): Prom
 
   isProcessing = true;
   lastActivityAt = Date.now();
+  currentAbortController = new AbortController();
+  const { signal } = currentAbortController;
+
+  // Notify renderer that AI is thinking
+  if (!panel.isDestroyed()) {
+    panel.webContents.send(IPC_CHANNELS.AI_STATE, 'thinking');
+  }
 
   try {
     // Take a fresh screenshot
     const screenshot = await captureScreenshot();
     const base64 = screenshot.toString('base64');
+
+    // Lazy-create the session row the first time we're actually saving
+    // something. This keeps empty "opened panel then closed" sessions out
+    // of history.
+    if (currentSessionId) {
+      const user = getStoredUser();
+      if (user?.id) {
+        try {
+          ensureSessionExists(currentSessionId, AI_MODEL, String(user.id));
+        } catch (err) {
+          console.warn('[session] ensureSessionExists failed:', err);
+        }
+      }
+    }
 
     // Store screenshot and send to renderer
     screenshotHistory.push(base64);
@@ -271,13 +309,20 @@ export async function sendMessage(userText: string, hotkeyTrigger = false): Prom
 
     console.log(`[session] Sending message (${conversationHistory.length} msgs)`);
 
+    // Notify renderer that AI is now streaming
+    if (!panel.isDestroyed()) {
+      panel.webContents.send(IPC_CHANNELS.AI_STATE, 'streaming');
+    }
+
+    partialResponse = '';
     const onToken = (token: string) => {
+      partialResponse += token;
       if (!panel.isDestroyed()) {
         panel.webContents.send(IPC_CHANNELS.SIDEPANEL_STREAM_TOKEN, token);
       }
     };
 
-    const fullResponse = await streamViaProxy(messages, AI_MODEL, onToken);
+    const fullResponse = await streamViaProxy(messages, AI_MODEL, onToken, signal);
 
     conversationHistory.push({ role: 'assistant', content: fullResponse });
 
@@ -288,20 +333,122 @@ export async function sendMessage(userText: string, hotkeyTrigger = false): Prom
     lastActivityAt = Date.now();
     console.log(`[session] Response complete (${fullResponse.length} chars)`);
 
-    // Generate session title after first exchange (fire-and-forget)
+    // Generate session title after first exchange (fire-and-forget).
+    // If a meeting is already linked to this session, the meeting's context
+    // (set in prep) takes priority — keep whatever we already have.
     if (!titleGenerated && currentSessionId) {
       titleGenerated = true;
-      generateSessionTitle(userText, fullResponse, currentSessionId);
+      void generateUnifiedSessionTitle(userText, fullResponse, currentSessionId);
     }
   } catch (err: any) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[session] Error:', msg);
-    if (!panel.isDestroyed()) {
-      panel.webContents.send(IPC_CHANNELS.AI_ERROR, msg);
+    if (signal.aborted) {
+      // User stopped generating — save partial response
+      console.log('[session] Generation stopped by user');
+      if (partialResponse.length > 0) {
+        conversationHistory.push({ role: 'assistant', content: partialResponse });
+      }
+      if (!panel.isDestroyed()) {
+        panel.webContents.send(IPC_CHANNELS.AI_RESPONSE_COMPLETE);
+      }
+    } else {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[session] Error:', msg);
+      if (!panel.isDestroyed()) {
+        const isQuotaError = /daily request limit/i.test(msg) || /daily.*limit/i.test(msg);
+
+        if (isQuotaError) {
+          // Before trusting the error, force a profile refresh. Common
+          // cause: user upgraded (Stripe webhook fired) but the local
+          // cached tier is stale, so we'd wrongly pop a Free upgrade
+          // modal. After refresh, decide what to show.
+          (async () => {
+            try {
+              const { refreshProfile } = await import('./auth/authClient');
+              await refreshProfile();
+            } catch {}
+            const tier = getStoredUser()?.tier || 'free';
+            if (panel.isDestroyed()) return;
+            if (tier === 'free') {
+              // Legitimately out of free-tier requests → upgrade modal.
+              panel.webContents.send('tier:quota-exceeded', { currentTier: tier });
+            } else {
+              // Pro/Max shouldn't see quota errors. The message itself is
+              // misleading ("daily limit" blames the user). Surface a
+              // neutral retry error instead so the user isn't nudged to
+              // upgrade a plan they already have.
+              panel.webContents.send(
+                IPC_CHANNELS.AI_ERROR,
+                'Request failed. Your plan may still be syncing — please retry in a moment.'
+              );
+            }
+          })();
+        } else {
+          panel.webContents.send(IPC_CHANNELS.AI_ERROR, msg);
+        }
+      }
     }
   } finally {
     isProcessing = false;
+    currentAbortController = null;
+    if (!panel.isDestroyed()) {
+      panel.webContents.send(IPC_CHANNELS.AI_STATE, 'idle');
+    }
   }
+}
+
+/**
+ * Resolves the title conflict between chat and meeting modes:
+ *   1. If the session already has a title (set from meeting context at
+ *      meeting-start or from a previous exchange), don't override.
+ *   2. If a meeting is linked and has explicit context/overview, prefer that.
+ *   3. Otherwise fall back to the chat-based AI title.
+ */
+async function generateUnifiedSessionTitle(
+  userText: string,
+  aiResponse: string,
+  sessionId: string,
+): Promise<void> {
+  try {
+    const { getDb } = await import('./db/connection');
+    const db = getDb();
+
+    // Check existing session + linked meeting state.
+    const row = db.prepare(`
+      SELECT s.title AS session_title, m.title AS meeting_title,
+             m.context AS meeting_context, m.overview AS meeting_overview
+      FROM sessions s
+      LEFT JOIN meetings m ON m.id = s.meeting_id
+      WHERE s.id = ?
+    `).get(sessionId) as {
+      session_title: string | null;
+      meeting_title: string | null;
+      meeting_context: string | null;
+      meeting_overview: string | null;
+    } | undefined;
+
+    if (row?.session_title) return; // already titled — respect it
+
+    // Meeting context is the user's explicit intent → strongest signal.
+    if (row?.meeting_context && row.meeting_context.trim().length > 0) {
+      const title = row.meeting_context.trim().slice(0, 80);
+      updateSessionTitle(sessionId, title);
+      console.log(`[session] Title from meeting context: "${title}"`);
+      return;
+    }
+
+    // Meeting overview (AI-generated summary) is next best.
+    if (row?.meeting_overview && row.meeting_overview.trim().length > 0) {
+      const title = row.meeting_overview.trim().slice(0, 80);
+      updateSessionTitle(sessionId, title);
+      console.log(`[session] Title from meeting overview: "${title}"`);
+      return;
+    }
+  } catch (err) {
+    console.warn('[session] Meeting-context title lookup failed, falling back to chat:', err);
+  }
+
+  // Fall through to the standard chat-based title generator.
+  return generateSessionTitle(userText, aiResponse, sessionId);
 }
 
 async function generateSessionTitle(
